@@ -129,7 +129,38 @@ $stored = [];
 
 $uploadCfg = $config['uploads'];
 
+// Helper function to check if file was fetched via API
+function hasApiFile(string $field): bool {
+    $apiKey = $_POST["{$field}_api_key"] ?? '';
+    return !empty($apiKey) && isset($_SESSION['api_files'][$apiKey]);
+}
+
+// Helper function to get API file path
+function getApiFilePath(string $field): ?string {
+    $apiKey = $_POST["{$field}_api_key"] ?? '';
+    if (empty($apiKey) || !isset($_SESSION['api_files'][$apiKey])) {
+        return null;
+    }
+    return $_SESSION['api_files'][$apiKey];
+}
+
 foreach ($requiredFiles as $field => $filename) {
+    // Check if file was fetched via API
+    if (hasApiFile($field)) {
+        $apiFilePath = getApiFilePath($field);
+        if ($apiFilePath && is_file($apiFilePath)) {
+            $dest = "{$uploadDir}/{$filename}";
+            copy($apiFilePath, $dest);
+            chmod($dest, 0640);
+            $stored[$field] = $dest;
+            // Clean up temp file
+            unlink($apiFilePath);
+            unset($_SESSION['api_files'][$_POST["{$field}_api_key"]]);
+            continue;
+        }
+    }
+    
+    // Otherwise, handle as regular upload
     $file = $_FILES[$field] ?? null;
     if (!is_array($file) || !Uploads::isPdfUpload($file, $uploadCfg)) {
         http_response_code(400);
@@ -142,6 +173,22 @@ foreach ($requiredFiles as $field => $filename) {
 }
 
 foreach ($optionalFiles as $field => $filename) {
+    // Check if file was fetched via API
+    if (hasApiFile($field)) {
+        $apiFilePath = getApiFilePath($field);
+        if ($apiFilePath && is_file($apiFilePath)) {
+            $dest = "{$uploadDir}/{$filename}";
+            copy($apiFilePath, $dest);
+            chmod($dest, 0640);
+            $stored[$field] = $dest;
+            // Clean up temp file
+            unlink($apiFilePath);
+            unset($_SESSION['api_files'][$_POST["{$field}_api_key"]]);
+            continue;
+        }
+    }
+    
+    // Otherwise, handle as regular upload
     $file = $_FILES[$field] ?? null;
     if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
         $stored[$field] = null;
