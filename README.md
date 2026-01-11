@@ -5,7 +5,8 @@ A flight docket generation system for OTR Aviation that creates comprehensive PD
 ## Features
 
 - Generate professional flight dockets with branded cover pages
-- Upload flight planning documents (flight plans, mass & balance, performance data, charts, etc.)
+- Upload flight planning documents (flight plans, mass & balance, performance data, weather, etc.)
+- **Automatic chart retrieval**: Aerodrome charts (VAC/ADC/PDC) automatically sourced from AIP storage
 - **NEW**: Automatic weather data fetching via CheckWX API (METAR, TAF, SIGMET)
 - **NEW**: Automatic NOTAM fetching via Notamify API
 - Merge multiple PDF documents into a single flight docket
@@ -25,12 +26,20 @@ See [API_INTEGRATION.md](API_INTEGRATION.md) for detailed setup instructions.
 
 1. Clone the repository
 2. Install dependencies: `composer install`
-3. Configure CheckWX API key (optional, for weather data):
+3. Set up AIP storage directory structure:
+   ```bash
+   mkdir -p storage/aip
+   # Create directories for each airport, e.g.:
+   mkdir -p storage/aip/EGMA storage/aip/LEGR
+   # Place chart PDFs in respective airport directories
+   # Charts should be named with identifiers: VAC, ADC, PDC, or AERODROME
+   ```
+4. Configure CheckWX API key (optional, for weather data):
    ```bash
    export CHECKWX_API_KEY="your-api-key-here"
    ```
-4. Set up web server to serve files from the `public` directory
-5. Ensure storage directories are writable
+5. Set up web server to serve files from the `public` directory
+6. Ensure storage directories are writable
 
 ## Requirements
 
@@ -38,6 +47,7 @@ See [API_INTEGRATION.md](API_INTEGRATION.md) for detailed setup instructions.
 - Composer
 - Web server (Apache, Nginx, etc.)
 - cURL extension enabled (for API integrations)
+- Optional: Ghostscript (`gs`) or PDFtk for merging multiple chart PDFs (falls back to copying first file if unavailable)
 
 ## Documentation
 
