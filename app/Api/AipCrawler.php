@@ -102,11 +102,15 @@ final class AipCrawler
     /**
      * Find PDF URLs for a given ICAO code using known ENAIRE URL patterns
      * 
+     * This method is specifically designed for Spanish airports using the ENAIRE AIP structure.
+     * The ICAO code prefix (first 2 letters) represents the country/region code used in the
+     * PDF filenames (e.g., LE for mainland Spain, GC for Canary Islands).
+     * 
      * Note: This method generates all potential PDF URLs based on the known ENAIRE structure.
      * Not all URLs may exist for every airport (some may return 404), but the downloadFile
      * method handles this gracefully by checking HTTP status and validating PDF content.
      * 
-     * @param string $icao ICAO airport code
+     * @param string $icao ICAO airport code (e.g., LEGR, LEMD, GCLP)
      * @return array Array of PDF URLs to attempt downloading
      */
     private function findPdfUrls(string $icao): array
@@ -114,6 +118,7 @@ final class AipCrawler
         $pdfUrls = [];
 
         // Extract country prefix (first 2 letters of ICAO code)
+        // For Spanish airports: LE = mainland Spain, GC = Canary Islands, etc.
         $countryPrefix = substr($icao, 0, 2);
 
         // Base URL pattern for ENAIRE AIP
