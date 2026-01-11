@@ -302,18 +302,35 @@ $aircraft = [
       fetchAllHelp.className = 'form-text text-muted';
 
       // Helper function to set feedback
-      const setFeedback = (inputElement, message) => {
-        inputElement.classList.add('is-valid');
-        // Remove any existing feedback first
-        const existingFeedback = inputElement.parentElement.querySelector('.valid-feedback');
-        if (existingFeedback) {
-          existingFeedback.remove();
+      const setFeedback = (inputElement, message, isError = false) => {
+        if (isError) {
+          inputElement.classList.add('is-invalid');
+          inputElement.classList.remove('is-valid');
+          // Remove any existing feedback first
+          const existingFeedback = inputElement.parentElement.querySelector('.invalid-feedback.api-feedback');
+          if (existingFeedback) {
+            existingFeedback.remove();
+          }
+          const feedbackDiv = document.createElement('div');
+          feedbackDiv.className = 'invalid-feedback api-feedback';
+          feedbackDiv.textContent = message;
+          inputElement.parentElement.appendChild(feedbackDiv);
+        } else {
+          inputElement.classList.add('is-valid');
+          inputElement.classList.remove('is-invalid');
+          // Remove any existing feedback first
+          const existingFeedback = inputElement.parentElement.querySelector('.valid-feedback.api-feedback');
+          if (existingFeedback) {
+            existingFeedback.remove();
+          }
+          const feedbackDiv = document.createElement('div');
+          feedbackDiv.className = 'valid-feedback api-feedback';
+          feedbackDiv.textContent = message;
+          inputElement.parentElement.appendChild(feedbackDiv);
         }
-        inputElement.parentElement.insertAdjacentHTML('beforeend', 
-          `<div class="valid-feedback">${message}</div>`);
       };
 
-      // Helper function to fetch data
+      // Helper function to fetch data with error handling
       const fetchData = async (dataType) => {
         const formData = new FormData();
         formData.append('csrf_token', csrfToken);
@@ -326,6 +343,11 @@ $aircraft = [
           method: 'POST',
           body: formData
         });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         return response.json();
       };
 
@@ -347,8 +369,12 @@ $aircraft = [
         metarTafApiKey.value = metarTafResult.value.file_key;
         setFeedback(metarTafFileInput, 'METAR/TAF data fetched from API');
         results.metar_taf = true;
-      } else if (metarTafResult.status === 'rejected') {
-        console.error('Error fetching METAR/TAF:', metarTafResult.reason);
+      } else {
+        const errorMsg = metarTafResult.status === 'rejected' 
+          ? 'Failed to fetch METAR/TAF data'
+          : (metarTafResult.value.error || 'METAR/TAF data not available');
+        setFeedback(metarTafFileInput, errorMsg, true);
+        console.error('Error fetching METAR/TAF:', metarTafResult.reason || metarTafResult.value);
       }
 
       // Process SIGMET result
@@ -356,8 +382,12 @@ $aircraft = [
         sigwxApiKey.value = sigmetResult.value.file_key;
         setFeedback(sigwxFileInput, 'SIGMET data fetched from API');
         results.sigmet = true;
-      } else if (sigmetResult.status === 'rejected') {
-        console.error('Error fetching SIGMET:', sigmetResult.reason);
+      } else {
+        const errorMsg = sigmetResult.status === 'rejected' 
+          ? 'Failed to fetch SIGMET data'
+          : (sigmetResult.value.error || 'SIGMET data not available');
+        setFeedback(sigwxFileInput, errorMsg, true);
+        console.error('Error fetching SIGMET:', sigmetResult.reason || sigmetResult.value);
       }
 
       // Process NOTAMs result
@@ -366,8 +396,12 @@ $aircraft = [
         notamsFileInput.removeAttribute('required');
         setFeedback(notamsFileInput, 'NOTAMs data fetched from API');
         results.notams = true;
-      } else if (notamsResult.status === 'rejected') {
-        console.error('Error fetching NOTAMs:', notamsResult.reason);
+      } else {
+        const errorMsg = notamsResult.status === 'rejected' 
+          ? 'Failed to fetch NOTAMs data'
+          : (notamsResult.value.error || 'NOTAMs data not available');
+        setFeedback(notamsFileInput, errorMsg, true);
+        console.error('Error fetching NOTAMs:', notamsResult.reason || notamsResult.value);
       }
 
       // Show results
