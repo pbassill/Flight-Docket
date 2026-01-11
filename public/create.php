@@ -96,6 +96,13 @@ $aircraft = [
 
             <hr class="my-4">
 
+            <div class="mb-3">
+              <button class="btn btn-primary" type="button" id="fetch-all-data">
+                <i class="fa-solid fa-cloud-arrow-down me-1"></i>Fetch Data via API
+              </button>
+              <div class="form-text" id="fetch-all-help">Automatically fetch METAR/TAF, SIGMET, and NOTAMs data from CheckWX and Notamify APIs.</div>
+            </div>
+
             <h2 class="h5">Uploads</h2>
 
             <div class="mb-3">
@@ -125,23 +132,15 @@ $aircraft = [
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-triangle-exclamation me-1"></i>NOTAMs (mandatory, PDF)</label>
               <div class="form-text">Include EGMA or LEGR and any destinations/alternates as applicable.</div>
-              <div class="input-group">
-                <input class="form-control" type="file" name="notams" accept="application/pdf" required id="notams-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-notams">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="notams" accept="application/pdf" required id="notams-file">
+              <input type="hidden" name="notams_api_key" id="notams-api-key">
               <div class="invalid-feedback">NOTAMs are required.</div>
             </div>
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-cloud-sun-rain me-1"></i>SIGWX/SIGMET (PDF)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="sigwx" accept="application/pdf" id="sigwx-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-sigmet">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="sigwx" accept="application/pdf" id="sigwx-file">
+              <input type="hidden" name="sigwx_api_key" id="sigwx-api-key">
             </div>
 
             <div class="mb-3">
@@ -151,12 +150,8 @@ $aircraft = [
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-cloud me-1"></i>METAR &amp; TAF (PDF)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="metar_taf" accept="application/pdf" id="metar-taf-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-metar-taf">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="metar_taf" accept="application/pdf" id="metar-taf-file">
+              <input type="hidden" name="metar_taf_api_key" id="metar-taf-api-key">
             </div>
 
             <div class="mb-3">
@@ -268,6 +263,163 @@ $aircraft = [
         findAlternatesBtn.disabled = false;
         findAlternatesBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i>Find Alternates';
       }
+    });
+  }
+
+  // Fetch Data via API functionality
+  const fetchAllDataBtn = document.getElementById('fetch-all-data');
+  const fetchAllHelp = document.getElementById('fetch-all-help');
+  const notamsFileInput = document.getElementById('notams-file');
+  const notamsApiKey = document.getElementById('notams-api-key');
+  const sigwxFileInput = document.getElementById('sigwx-file');
+  const sigwxApiKey = document.getElementById('sigwx-api-key');
+  const metarTafFileInput = document.getElementById('metar-taf-file');
+  const metarTafApiKey = document.getElementById('metar-taf-api-key');
+
+  if (fetchAllDataBtn) {
+    fetchAllDataBtn.addEventListener('click', async () => {
+      const departure = departureInput.value.trim().toUpperCase();
+      const destination = destinationInput.value.trim().toUpperCase();
+      const alternates = alternatesInput.value.trim();
+
+      // Validate inputs
+      if (!departure || departure.length !== 4) {
+        fetchAllHelp.textContent = 'Please enter a valid 4-letter departure ICAO code.';
+        fetchAllHelp.className = 'form-text text-danger';
+        return;
+      }
+
+      if (!destination || destination.length !== 4) {
+        fetchAllHelp.textContent = 'Please enter a valid 4-letter destination ICAO code.';
+        fetchAllHelp.className = 'form-text text-danger';
+        return;
+      }
+
+      // Show loading state
+      fetchAllDataBtn.disabled = true;
+      fetchAllDataBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Fetching data...';
+      fetchAllHelp.textContent = 'Fetching data from APIs...';
+      fetchAllHelp.className = 'form-text text-muted';
+
+      // Helper function to set feedback
+      const setFeedback = (inputElement, message, isError = false) => {
+        if (isError) {
+          inputElement.classList.add('is-invalid');
+          inputElement.classList.remove('is-valid');
+          // Remove any existing feedback first
+          const existingFeedback = inputElement.parentElement.querySelector('.invalid-feedback.api-feedback');
+          if (existingFeedback) {
+            existingFeedback.remove();
+          }
+          const feedbackDiv = document.createElement('div');
+          feedbackDiv.className = 'invalid-feedback api-feedback';
+          feedbackDiv.textContent = message;
+          inputElement.parentElement.appendChild(feedbackDiv);
+        } else {
+          inputElement.classList.add('is-valid');
+          inputElement.classList.remove('is-invalid');
+          // Remove any existing feedback first
+          const existingFeedback = inputElement.parentElement.querySelector('.valid-feedback.api-feedback');
+          if (existingFeedback) {
+            existingFeedback.remove();
+          }
+          const feedbackDiv = document.createElement('div');
+          feedbackDiv.className = 'valid-feedback api-feedback';
+          feedbackDiv.textContent = message;
+          inputElement.parentElement.appendChild(feedbackDiv);
+        }
+      };
+
+      // Helper function to fetch data with error handling
+      const fetchData = async (dataType) => {
+        const formData = new FormData();
+        formData.append('csrf_token', csrfToken);
+        formData.append('departure', departure);
+        formData.append('destination', destination);
+        formData.append('alternates', alternates);
+        formData.append('data_type', dataType);
+
+        const response = await fetch('fetch_weather.php', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.json();
+      };
+
+      const results = {
+        metar_taf: false,
+        sigmet: false,
+        notams: false
+      };
+
+      // Fetch all data types in parallel
+      const [metarTafResult, sigmetResult, notamsResult] = await Promise.allSettled([
+        fetchData('metar_taf'),
+        fetchData('sigmet'),
+        fetchData('notams')
+      ]);
+
+      // Process METAR/TAF result
+      if (metarTafResult.status === 'fulfilled' && metarTafResult.value.success && metarTafResult.value.file_key) {
+        metarTafApiKey.value = metarTafResult.value.file_key;
+        setFeedback(metarTafFileInput, 'METAR/TAF data fetched from API');
+        results.metar_taf = true;
+      } else {
+        const errorMsg = metarTafResult.status === 'rejected' 
+          ? 'Failed to fetch METAR/TAF data'
+          : (metarTafResult.value.error || 'METAR/TAF data not available');
+        setFeedback(metarTafFileInput, errorMsg, true);
+        console.error('Error fetching METAR/TAF:', metarTafResult.reason || metarTafResult.value);
+      }
+
+      // Process SIGMET result
+      if (sigmetResult.status === 'fulfilled' && sigmetResult.value.success && sigmetResult.value.file_key) {
+        sigwxApiKey.value = sigmetResult.value.file_key;
+        setFeedback(sigwxFileInput, 'SIGMET data fetched from API');
+        results.sigmet = true;
+      } else {
+        const errorMsg = sigmetResult.status === 'rejected' 
+          ? 'Failed to fetch SIGMET data'
+          : (sigmetResult.value.error || 'SIGMET data not available');
+        setFeedback(sigwxFileInput, errorMsg, true);
+        console.error('Error fetching SIGMET:', sigmetResult.reason || sigmetResult.value);
+      }
+
+      // Process NOTAMs result
+      if (notamsResult.status === 'fulfilled' && notamsResult.value.success && notamsResult.value.file_key) {
+        notamsApiKey.value = notamsResult.value.file_key;
+        notamsFileInput.removeAttribute('required');
+        setFeedback(notamsFileInput, 'NOTAMs data fetched from API');
+        results.notams = true;
+      } else {
+        const errorMsg = notamsResult.status === 'rejected' 
+          ? 'Failed to fetch NOTAMs data'
+          : (notamsResult.value.error || 'NOTAMs data not available');
+        setFeedback(notamsFileInput, errorMsg, true);
+        console.error('Error fetching NOTAMs:', notamsResult.reason || notamsResult.value);
+      }
+
+      // Show results
+      const successCount = Object.values(results).filter(v => v).length;
+      if (successCount === 3) {
+        fetchAllHelp.textContent = 'All data fetched successfully!';
+        fetchAllHelp.className = 'form-text text-success';
+      } else if (successCount > 0) {
+        fetchAllHelp.textContent = `Partially fetched: ${successCount} of 3 data types succeeded. Check individual fields for details.`;
+        fetchAllHelp.className = 'form-text text-warning';
+      } else {
+        fetchAllHelp.textContent = 'Failed to fetch data. Please check your ICAO codes and try again, or upload files manually.';
+        fetchAllHelp.className = 'form-text text-danger';
+      }
+
+      // Reset button state
+      fetchAllDataBtn.disabled = false;
+      fetchAllDataBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down me-1"></i>Fetch Data via API';
     });
   }
 })();
