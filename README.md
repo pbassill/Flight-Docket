@@ -8,7 +8,7 @@ A flight docket generation system for OTR Aviation that creates comprehensive PD
 - Upload flight planning documents (flight plans, mass & balance, performance data, charts, etc.)
 - **NEW**: Automatic weather data fetching via CheckWX API (METAR, TAF, SIGMET)
 - **NEW**: Automatic NOTAM fetching via Notamify API
-- **NEW**: Automatic aerodrome chart fetching via AIP España (Spanish airports only)
+- **NEW**: AIP PDF downloader for airport information by ICAO code
 - Merge multiple PDF documents into a single flight docket
 - Organized checklist index
 - Secure file handling and storage
@@ -22,6 +22,29 @@ The application now supports automatic fetching of weather, NOTAM, and chart dat
 - **AIP España**: Fetch aerodrome charts (VAC/ADC/PDC) for Spanish airports (ICAO codes starting with LE)
 
 See [API_INTEGRATION.md](API_INTEGRATION.md) for detailed setup instructions.
+
+## AIP PDF Downloader
+
+The application includes a script to download Aeronautical Information Publication (AIP) PDFs from the ENAIRE website for any airport by ICAO code.
+
+### Usage
+
+Download AIP PDFs for one or more airports:
+
+```bash
+# Single airport
+php scripts/download_aip_pdfs.php LEMD
+
+# Multiple airports
+php scripts/download_aip_pdfs.php LEMD LEBL LEMG
+
+# Show help
+php scripts/download_aip_pdfs.php --help
+```
+
+Downloaded PDFs are stored in `storage/aip/ICAO_CODE/` (excluded from git).
+
+Common Spanish airport ICAO codes: LEMD (Madrid), LEBL (Barcelona), LEMG (Málaga), LEVC (Valencia), LEAL (Alicante).
 
 ## Quick Start
 

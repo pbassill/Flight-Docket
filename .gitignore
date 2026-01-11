@@ -3,6 +3,7 @@
 /storage/generated/
 /storage/dockets/
 /storage/logs/
+/storage/aip/
 composer.phar
 .DS_Store
 *.log
