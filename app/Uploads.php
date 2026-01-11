@@ -25,6 +25,16 @@ final class Uploads
             return false;
         }
 
+        // Verify actual file size matches reported size
+        if (!is_uploaded_file($file['tmp_name'])) {
+            return false;
+        }
+        
+        $actualSize = filesize($file['tmp_name']);
+        if ($actualSize === false || $actualSize !== $file['size']) {
+            return false;
+        }
+
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if (!in_array($ext, $cfg['allowed_ext'], true)) {
             return false;

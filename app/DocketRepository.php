@@ -10,6 +10,12 @@ final class DocketRepository
         private readonly array $config
     ) {}
 
+    private function isValidId(string $id): bool
+    {
+        // DOCKET-20260111-123456-ABC123 format
+        return preg_match('/^DOCKET-\d{8}-\d{6}-[A-F0-9]{6}$/', $id) === 1;
+    }
+
     public function newId(): string
     {
         $stamp = (new \DateTimeImmutable('now'))->format('Ymd-His');
@@ -46,6 +52,9 @@ final class DocketRepository
 
     public function listRecent(int $limit = 25): array
     {
+        // Limit maximum results to prevent resource exhaustion
+        $limit = min(max(1, $limit), 100);
+        
         $base = rtrim($this->config['paths']['dockets'], '/');
         if (!is_dir($base)) {
             return [];
@@ -78,6 +87,10 @@ final class DocketRepository
 
     public function loadById(string $id): ?array
     {
+        if (!$this->isValidId($id)) {
+            return null;
+        }
+
         $base = rtrim($this->config['paths']['dockets'], '/');
         $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($base));
         foreach ($rii as $file) {

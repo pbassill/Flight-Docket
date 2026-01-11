@@ -7,9 +7,28 @@ require __DIR__ . '/../vendor/autoload.php';
 use OTR\DocketRepository;
 use OTR\Uploads;
 use OTR\Pdf\PdfBuilder;
+use OTR\Security;
+use OTR\ErrorHandler;
 
 $config = require __DIR__ . '/../config.php';
 date_default_timezone_set($config['timezone']);
+
+// Initialize error handler
+$logDir = $config['paths']['logs'] ?? __DIR__ . '/../storage/logs';
+if (!is_dir($logDir)) {
+    mkdir($logDir, 0750, true);
+}
+ErrorHandler::register($logDir . '/error.log');
+
+Security::startSecureSession();
+Security::setSecurityHeaders();
+
+// CSRF validation
+$csrfToken = (string)($_POST['csrf_token'] ?? '');
+if (!Security::validateCsrfToken($csrfToken)) {
+    http_response_code(403);
+    die('CSRF token validation failed.');
+}
 
 $repo = new DocketRepository($config);
 $id = $repo->newId();
@@ -21,17 +40,72 @@ function post(string $k): string {
     return trim((string)($_POST[$k] ?? ''));
 }
 
+// Validate required fields
+$aircraftType = post('aircraft_type');
+$registration = strtoupper(post('registration'));
+$callsign = strtoupper(post('callsign'));
+$departure = strtoupper(post('departure'));
+$destination = strtoupper(post('destination'));
+$alternates = post('alternates');
+$etdLocal = post('etd_local');
+
+// Validate aircraft type (max 20 chars)
+if (strlen($aircraftType) > 20 || strlen($aircraftType) === 0) {
+    http_response_code(400);
+    die('Invalid aircraft type.');
+}
+
+// Validate registration format
+if (!Security::validateRegistration($registration)) {
+    http_response_code(400);
+    die('Invalid registration format.');
+}
+
+// Validate callsign (max 10 chars, alphanumeric)
+if ($callsign !== '' && (strlen($callsign) > 10 || !ctype_alnum($callsign))) {
+    http_response_code(400);
+    die('Invalid callsign format.');
+}
+
+// Validate ICAO codes
+if (!Security::validateIcaoCode($departure)) {
+    http_response_code(400);
+    die('Invalid departure ICAO code.');
+}
+
+if (!Security::validateIcaoCode($destination)) {
+    http_response_code(400);
+    die('Invalid destination ICAO code.');
+}
+
+// Process alternates
+$alternatesArray = array_values(array_filter(array_map(
+    static fn($x) => strtoupper(trim($x)),
+    explode(',', $alternates)
+)));
+
+// Validate each alternate ICAO code
+foreach ($alternatesArray as $alt) {
+    if (!Security::validateIcaoCode($alt)) {
+        http_response_code(400);
+        die('Invalid alternate ICAO code: ' . htmlspecialchars($alt));
+    }
+}
+
+// Limit alternates to 5
+if (count($alternatesArray) > 5) {
+    http_response_code(400);
+    die('Too many alternates (max 5).');
+}
+
 $flight = [
-    'aircraft_type' => post('aircraft_type'),
-    'registration'  => post('registration'),
-    'callsign'      => post('callsign'),
-    'departure'     => strtoupper(post('departure')),
-    'destination'   => strtoupper(post('destination')),
-    'alternates'    => array_values(array_filter(array_map(
-        static fn($x) => strtoupper(trim($x)),
-        explode(',', post('alternates'))
-    ))),
-    'etd_local'     => post('etd_local'),
+    'aircraft_type' => $aircraftType,
+    'registration'  => $registration,
+    'callsign'      => $callsign,
+    'departure'     => $departure,
+    'destination'   => $destination,
+    'alternates'    => $alternatesArray,
+    'etd_local'     => $etdLocal,
 ];
 
 $requiredFiles = [

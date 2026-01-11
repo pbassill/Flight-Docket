@@ -5,6 +5,10 @@ require __DIR__ . '/../vendor/autoload.php';
 $config = require __DIR__ . '/../config.php';
 date_default_timezone_set($config['timezone']);
 
+\OTR\Security::startSecureSession();
+\OTR\Security::setSecurityHeaders();
+$csrfToken = \OTR\Security::generateCsrfToken();
+
 $aircraft = [
     'C140'  => 'Cessna 140',
     'C150L' => 'Cessna FRA150L',
@@ -37,6 +41,7 @@ $aircraft = [
           <h1 class="h4 mb-3">Create docket</h1>
 
           <form action="submit.php" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
 
             <div class="row g-3">
               <div class="col-md-4">

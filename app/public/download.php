@@ -5,6 +5,8 @@ require __DIR__ . '/../vendor/autoload.php';
 $config = require __DIR__ . '/../config.php';
 date_default_timezone_set($config['timezone']);
 
+\OTR\Security::setSecurityHeaders();
+
 $repo = new \OTR\DocketRepository($config);
 
 $id = (string)($_GET['id'] ?? '');
@@ -21,8 +23,10 @@ if (!$path || !is_file($path)) {
     exit('PDF not found.');
 }
 
+$safeFilename = \OTR\Security::sanitizeFilename($id) . '.pdf';
+
 header('Content-Type: application/pdf');
-header('Content-Disposition: attachment; filename="' . $id . '.pdf"');
+header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
 header('Content-Length: ' . (string)filesize($path));
 readfile($path);
 exit;

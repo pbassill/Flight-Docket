@@ -12,6 +12,7 @@ return [
         'dockets'   => __DIR__ . '/storage/dockets',
         'generated' => __DIR__ . '/storage/generated',
         'logo'      => __DIR__ . '/public/assets/otr-logo.png',
+        'logs'      => __DIR__ . '/storage/logs',
     ],
 
     'uploads' => [
