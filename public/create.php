@@ -156,19 +156,37 @@ $aircraft = [
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-map me-1"></i>Charts pack: Departure (VAC/ADC/PDC/Aerodrome data) (mandatory, PDF)</label>
-              <input class="form-control" type="file" name="charts_departure" accept="application/pdf" required>
+              <div class="input-group">
+                <input class="form-control" type="file" name="charts_departure" accept="application/pdf" required id="charts-departure-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-charts-departure">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
               <div class="invalid-feedback">Departure charts pack is required.</div>
+              <div class="form-text" id="charts-departure-help"></div>
             </div>
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-map-location-dot me-1"></i>Charts pack: Destination (VAC/ADC/PDC/Aerodrome data) (mandatory, PDF)</label>
-              <input class="form-control" type="file" name="charts_destination" accept="application/pdf" required>
+              <div class="input-group">
+                <input class="form-control" type="file" name="charts_destination" accept="application/pdf" required id="charts-destination-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-charts-destination">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
               <div class="invalid-feedback">Destination charts pack is required.</div>
+              <div class="form-text" id="charts-destination-help"></div>
             </div>
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-map-pin me-1"></i>Charts pack: Alternates (single combined PDF, optional)</label>
-              <input class="form-control" type="file" name="charts_alternates" accept="application/pdf">
+              <div class="input-group">
+                <input class="form-control" type="file" name="charts_alternates" accept="application/pdf" id="charts-alternates-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-charts-alternates">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
+              <div class="form-text" id="charts-alternates-help"></div>
             </div>
 
             <button class="btn btn-primary btn-lg mt-2" type="submit">
@@ -266,160 +284,127 @@ $aircraft = [
     });
   }
 
-  // Fetch Data via API functionality
-  const fetchAllDataBtn = document.getElementById('fetch-all-data');
-  const fetchAllHelp = document.getElementById('fetch-all-help');
-  const notamsFileInput = document.getElementById('notams-file');
-  const notamsApiKey = document.getElementById('notams-api-key');
-  const sigwxFileInput = document.getElementById('sigwx-file');
-  const sigwxApiKey = document.getElementById('sigwx-api-key');
-  const metarTafFileInput = document.getElementById('metar-taf-file');
-  const metarTafApiKey = document.getElementById('metar-taf-api-key');
+  // Helper function to fetch charts via API
+  async function fetchCharts(chartType, icaoInput, fileInput, helpElement, button) {
+    const icao = icaoInput.value.trim().toUpperCase();
 
-  if (fetchAllDataBtn) {
-    fetchAllDataBtn.addEventListener('click', async () => {
-      const departure = departureInput.value.trim().toUpperCase();
-      const destination = destinationInput.value.trim().toUpperCase();
-      const alternates = alternatesInput.value.trim();
+    // Validate ICAO code
+    if (!icao || icao.length !== 4) {
+      helpElement.textContent = 'Please enter a valid 4-letter ICAO code.';
+      helpElement.className = 'form-text text-danger';
+      return;
+    }
 
-      // Validate inputs
-      if (!departure || departure.length !== 4) {
-        fetchAllHelp.textContent = 'Please enter a valid 4-letter departure ICAO code.';
-        fetchAllHelp.className = 'form-text text-danger';
-        return;
-      }
+    // Check if it's a Spanish airport
+    if (!icao.startsWith('LE')) {
+      helpElement.textContent = 'AIP España API only supports Spanish airports (ICAO codes starting with LE).';
+      helpElement.className = 'form-text text-danger';
+      return;
+    }
 
-      if (!destination || destination.length !== 4) {
-        fetchAllHelp.textContent = 'Please enter a valid 4-letter destination ICAO code.';
-        fetchAllHelp.className = 'form-text text-danger';
-        return;
-      }
+    // Show loading state
+    button.disabled = true;
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Fetching...';
+    helpElement.textContent = `Fetching charts for ${icao}...`;
+    helpElement.className = 'form-text text-muted';
 
-      // Show loading state
-      fetchAllDataBtn.disabled = true;
-      fetchAllDataBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Fetching data...';
-      fetchAllHelp.textContent = 'Fetching data from APIs...';
-      fetchAllHelp.className = 'form-text text-muted';
+    try {
+      const formData = new FormData();
+      formData.append('csrf_token', csrfToken);
+      formData.append('icao', icao);
+      formData.append('chart_type', chartType);
 
-      // Helper function to set feedback
-      const setFeedback = (inputElement, message, isError = false) => {
-        if (isError) {
-          inputElement.classList.add('is-invalid');
-          inputElement.classList.remove('is-valid');
-          // Remove any existing feedback first
-          const existingFeedback = inputElement.parentElement.querySelector('.invalid-feedback.api-feedback');
-          if (existingFeedback) {
-            existingFeedback.remove();
-          }
-          const feedbackDiv = document.createElement('div');
-          feedbackDiv.className = 'invalid-feedback api-feedback';
-          feedbackDiv.textContent = message;
-          inputElement.parentElement.appendChild(feedbackDiv);
-        } else {
-          inputElement.classList.add('is-valid');
-          inputElement.classList.remove('is-invalid');
-          // Remove any existing feedback first
-          const existingFeedback = inputElement.parentElement.querySelector('.valid-feedback.api-feedback');
-          if (existingFeedback) {
-            existingFeedback.remove();
-          }
-          const feedbackDiv = document.createElement('div');
-          feedbackDiv.className = 'valid-feedback api-feedback';
-          feedbackDiv.textContent = message;
-          inputElement.parentElement.appendChild(feedbackDiv);
+      const response = await fetch('fetch_charts.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.file_key) {
+        // Create a hidden input to store the file key
+        const existingInput = document.querySelector(`input[name="charts_${chartType}_api_key"]`);
+        if (existingInput) {
+          existingInput.remove();
         }
-      };
 
-      // Helper function to fetch data with error handling
-      const fetchData = async (dataType) => {
-        const formData = new FormData();
-        formData.append('csrf_token', csrfToken);
-        formData.append('departure', departure);
-        formData.append('destination', destination);
-        formData.append('alternates', alternates);
-        formData.append('data_type', dataType);
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = `charts_${chartType}_api_key`;
+        hiddenInput.value = data.file_key;
+        fileInput.parentElement.appendChild(hiddenInput);
 
-        const response = await fetch('fetch_weather.php', {
-          method: 'POST',
-          body: formData
-        });
+        // Make file input optional since we have API data
+        fileInput.removeAttribute('required');
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return response.json();
-      };
-
-      const results = {
-        metar_taf: false,
-        sigmet: false,
-        notams: false
-      };
-
-      // Fetch all data types in parallel
-      const [metarTafResult, sigmetResult, notamsResult] = await Promise.allSettled([
-        fetchData('metar_taf'),
-        fetchData('sigmet'),
-        fetchData('notams')
-      ]);
-
-      // Process METAR/TAF result
-      if (metarTafResult.status === 'fulfilled' && metarTafResult.value.success && metarTafResult.value.file_key) {
-        metarTafApiKey.value = metarTafResult.value.file_key;
-        setFeedback(metarTafFileInput, 'METAR/TAF data fetched from API');
-        results.metar_taf = true;
+        helpElement.textContent = `✓ Fetched ${data.charts_found} chart(s) for ${icao} from AIP España`;
+        helpElement.className = 'form-text text-success';
       } else {
-        const errorMsg = metarTafResult.status === 'rejected' 
-          ? 'Failed to fetch METAR/TAF data'
-          : (metarTafResult.value.error || 'METAR/TAF data not available');
-        setFeedback(metarTafFileInput, errorMsg, true);
-        console.error('Error fetching METAR/TAF:', metarTafResult.reason || metarTafResult.value);
+        helpElement.textContent = data.error || 'Failed to fetch charts.';
+        helpElement.className = 'form-text text-danger';
       }
-
-      // Process SIGMET result
-      if (sigmetResult.status === 'fulfilled' && sigmetResult.value.success && sigmetResult.value.file_key) {
-        sigwxApiKey.value = sigmetResult.value.file_key;
-        setFeedback(sigwxFileInput, 'SIGMET data fetched from API');
-        results.sigmet = true;
-      } else {
-        const errorMsg = sigmetResult.status === 'rejected' 
-          ? 'Failed to fetch SIGMET data'
-          : (sigmetResult.value.error || 'SIGMET data not available');
-        setFeedback(sigwxFileInput, errorMsg, true);
-        console.error('Error fetching SIGMET:', sigmetResult.reason || sigmetResult.value);
-      }
-
-      // Process NOTAMs result
-      if (notamsResult.status === 'fulfilled' && notamsResult.value.success && notamsResult.value.file_key) {
-        notamsApiKey.value = notamsResult.value.file_key;
-        notamsFileInput.removeAttribute('required');
-        setFeedback(notamsFileInput, 'NOTAMs data fetched from API');
-        results.notams = true;
-      } else {
-        const errorMsg = notamsResult.status === 'rejected' 
-          ? 'Failed to fetch NOTAMs data'
-          : (notamsResult.value.error || 'NOTAMs data not available');
-        setFeedback(notamsFileInput, errorMsg, true);
-        console.error('Error fetching NOTAMs:', notamsResult.reason || notamsResult.value);
-      }
-
-      // Show results
-      const successCount = Object.values(results).filter(v => v).length;
-      if (successCount === 3) {
-        fetchAllHelp.textContent = 'All data fetched successfully!';
-        fetchAllHelp.className = 'form-text text-success';
-      } else if (successCount > 0) {
-        fetchAllHelp.textContent = `Partially fetched: ${successCount} of 3 data types succeeded. Check individual fields for details.`;
-        fetchAllHelp.className = 'form-text text-warning';
-      } else {
-        fetchAllHelp.textContent = 'Failed to fetch data. Please check your ICAO codes and try again, or upload files manually.';
-        fetchAllHelp.className = 'form-text text-danger';
-      }
-
+    } catch (error) {
+      helpElement.textContent = 'Error: ' + error.message;
+      helpElement.className = 'form-text text-danger';
+    } finally {
       // Reset button state
-      fetchAllDataBtn.disabled = false;
-      fetchAllDataBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down me-1"></i>Fetch Data via API';
+      button.disabled = false;
+      button.innerHTML = originalHTML;
+    }
+  }
+
+  // Fetch charts for departure
+  const fetchChartsDepartureBtn = document.getElementById('fetch-charts-departure');
+  if (fetchChartsDepartureBtn) {
+    fetchChartsDepartureBtn.addEventListener('click', () => {
+      fetchCharts(
+        'departure',
+        departureInput,
+        document.getElementById('charts-departure-file'),
+        document.getElementById('charts-departure-help'),
+        fetchChartsDepartureBtn
+      );
+    });
+  }
+
+  // Fetch charts for destination
+  const fetchChartsDestinationBtn = document.getElementById('fetch-charts-destination');
+  if (fetchChartsDestinationBtn) {
+    fetchChartsDestinationBtn.addEventListener('click', () => {
+      fetchCharts(
+        'destination',
+        destinationInput,
+        document.getElementById('charts-destination-file'),
+        document.getElementById('charts-destination-help'),
+        fetchChartsDestinationBtn
+      );
+    });
+  }
+
+  // Fetch charts for alternates (use first alternate if multiple)
+  const fetchChartsAlternatesBtn = document.getElementById('fetch-charts-alternates');
+  if (fetchChartsAlternatesBtn) {
+    fetchChartsAlternatesBtn.addEventListener('click', () => {
+      const alternatesValue = alternatesInput.value.trim().toUpperCase();
+      if (!alternatesValue) {
+        const helpElement = document.getElementById('charts-alternates-help');
+        helpElement.textContent = 'Please enter at least one alternate ICAO code.';
+        helpElement.className = 'form-text text-danger';
+        return;
+      }
+      
+      // Use the first alternate
+      const firstAlternate = alternatesValue.split(',')[0].trim();
+      const fakeInput = { value: firstAlternate };
+      
+      fetchCharts(
+        'alternates',
+        fakeInput,
+        document.getElementById('charts-alternates-file'),
+        document.getElementById('charts-alternates-help'),
+        fetchChartsAlternatesBtn
+      );
     });
   }
 })();
