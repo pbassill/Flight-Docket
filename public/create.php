@@ -256,8 +256,6 @@ $aircraft = [
     });
   }
 })();
-  });
-})();
 </script>
 </body>
 </html>
