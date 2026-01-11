@@ -87,7 +87,13 @@ try {
     if ($tempFile === false) {
         throw new \RuntimeException('Failed to create temporary file');
     }
-    $tempFile .= '.pdf';
+    // Rename to add .pdf extension
+    $tempFilePdf = $tempFile . '.pdf';
+    if (!rename($tempFile, $tempFilePdf)) {
+        unlink($tempFile);
+        throw new \RuntimeException('Failed to create temporary PDF file');
+    }
+    $tempFile = $tempFilePdf;
     
     try {
         PdfGenerator::mergeChartPdfs($chartsData, $tempFile);

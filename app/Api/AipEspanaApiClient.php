@@ -47,6 +47,9 @@ final class AipEspanaApiClient
     /**
      * Construct URL for a specific chart type
      * 
+     * Note: The actual URL format used by AIP España may vary. This implementation
+     * attempts several common patterns. Adjust based on actual AIP España structure.
+     * 
      * @param string $icao ICAO code
      * @param string $chartType Chart type identifier
      * @return string URL to the chart
@@ -55,15 +58,17 @@ final class AipEspanaApiClient
     {
         $icaoUpper = strtoupper($icao);
         
-        // AIP España typically uses formats like:
-        // https://aip.enaire.es/AIP/AD-2.LEGR-ADC.pdf
-        // https://aip.enaire.es/AIP/AD-2.LEGR.pdf
+        // AIP España URL patterns may include:
+        // - AD-2.{ICAO}.pdf (general aerodrome section)
+        // - {ICAO}-{TYPE}.pdf (specific chart types)
+        // Adjust these patterns based on actual AIP España structure
         
         if ($chartType === 'AD-2') {
-            return "{$this->baseUrl}/{$chartType}.{$icaoUpper}.pdf";
+            return "{$this->baseUrl}/AD-2.{$icaoUpper}.pdf";
         }
         
-        return "{$this->baseUrl}/{$chartType}-{$icaoUpper}.pdf";
+        // For specific chart types, try the pattern: {ICAO}-{TYPE}.pdf
+        return "{$this->baseUrl}/{$icaoUpper}-{$chartType}.pdf";
     }
 
     /**

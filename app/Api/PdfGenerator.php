@@ -174,7 +174,7 @@ final class PdfGenerator
         // Save the PDF content
         $written = file_put_contents($outputPath, $firstChart['content']);
         if ($written === false) {
-            throw new \RuntimeException("Failed to write PDF to {$outputPath}");
+            throw new \RuntimeException('Failed to write chart PDF file');
         }
         
         chmod($outputPath, 0640);
