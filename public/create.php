@@ -326,6 +326,11 @@ $aircraft = [
           metarTafApiKey.value = data.file_key;
           // Create a visual indicator that file was fetched
           metarTafFileInput.classList.add('is-valid');
+          // Remove any existing feedback first
+          const existingFeedback = metarTafFileInput.parentElement.querySelector('.valid-feedback');
+          if (existingFeedback) {
+            existingFeedback.remove();
+          }
           metarTafFileInput.parentElement.insertAdjacentHTML('beforeend', 
             '<div class="valid-feedback">METAR/TAF data fetched from API</div>');
           results.metar_taf = true;
@@ -352,6 +357,11 @@ $aircraft = [
         if (data.success && data.file_key) {
           sigwxApiKey.value = data.file_key;
           sigwxFileInput.classList.add('is-valid');
+          // Remove any existing feedback first
+          const existingFeedback = sigwxFileInput.parentElement.querySelector('.valid-feedback');
+          if (existingFeedback) {
+            existingFeedback.remove();
+          }
           sigwxFileInput.parentElement.insertAdjacentHTML('beforeend', 
             '<div class="valid-feedback">SIGMET data fetched from API</div>');
           results.sigmet = true;
@@ -379,6 +389,11 @@ $aircraft = [
           notamsApiKey.value = data.file_key;
           notamsFileInput.classList.add('is-valid');
           notamsFileInput.removeAttribute('required');
+          // Remove any existing feedback first
+          const existingFeedback = notamsFileInput.parentElement.querySelector('.valid-feedback');
+          if (existingFeedback) {
+            existingFeedback.remove();
+          }
           notamsFileInput.parentElement.insertAdjacentHTML('beforeend', 
             '<div class="valid-feedback">NOTAMs data fetched from API</div>');
           results.notams = true;
