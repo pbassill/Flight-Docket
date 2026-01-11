@@ -52,13 +52,8 @@ final class AlternatesFinder
             return [];
         }
         
-        // Try 10 miles first
-        $alternates = $this->findAlternatesWithinDistance($departure, $destination, 10.0);
-        
-        // If none found, try 25 miles
-        if (empty($alternates)) {
-            $alternates = $this->findAlternatesWithinDistance($departure, $destination, 25.0);
-        }
+        // Find all alternates within 50 miles (covers common aviation alternate requirements)
+        $alternates = $this->findAlternatesWithinDistance($departure, $destination, 50.0);
         
         return $alternates;
     }
