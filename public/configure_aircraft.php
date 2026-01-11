@@ -68,7 +68,6 @@ function getValue(?array $data, string $key, string $subkey = ''): string {
             <?php if ($editAircraft): ?>
               <input type="hidden" name="id" value="<?= htmlspecialchars($editAircraft['id'] ?? '') ?>">
             <?php endif; ?>
-            <input type="hidden" name="unit_system_display" id="unit_system_display" value="metric">
 
             <h5 class="border-bottom pb-2 mb-3">Basic Information</h5>
             
@@ -309,9 +308,7 @@ function getValue(?array $data, string $key, string $subkey = ''): string {
         // Only do this right before actual submission
         if (currentUnitSystem === 'imperial') {
           convertFormValues('imperial', 'metric');
-          // Don't update currentUnitSystem here to avoid UI inconsistency if something fails
         }
-        form.classList.add('was-validated');
       }
     }, false);
   });
@@ -428,7 +425,6 @@ function convertFormValues(fromSystem, toSystem) {
 document.addEventListener('DOMContentLoaded', function() {
   const metricRadio = document.getElementById('unit_metric');
   const imperialRadio = document.getElementById('unit_imperial');
-  const hiddenField = document.getElementById('unit_system_display');
   
   if (metricRadio && imperialRadio) {
     metricRadio.addEventListener('change', function() {
@@ -437,7 +433,6 @@ document.addEventListener('DOMContentLoaded', function() {
         currentUnitSystem = 'metric';
         updateUnitLabels('metric');
         convertFormValues(oldSystem, 'metric');
-        if (hiddenField) hiddenField.value = 'metric';
       }
     });
     
@@ -447,7 +442,6 @@ document.addEventListener('DOMContentLoaded', function() {
         currentUnitSystem = 'imperial';
         updateUnitLabels('imperial');
         convertFormValues(oldSystem, 'imperial');
-        if (hiddenField) hiddenField.value = 'imperial';
       }
     });
   }
