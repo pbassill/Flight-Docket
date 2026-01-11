@@ -303,14 +303,16 @@ function getValue(?array $data, string $key, string $subkey = ''): string {
       if (!form.checkValidity()) {
         event.preventDefault();
         event.stopPropagation();
+        form.classList.add('was-validated');
       } else {
         // Convert all values back to metric before submitting
+        // Only do this right before actual submission
         if (currentUnitSystem === 'imperial') {
           convertFormValues('imperial', 'metric');
-          currentUnitSystem = 'metric';
+          // Don't update currentUnitSystem here to avoid UI inconsistency if something fails
         }
+        form.classList.add('was-validated');
       }
-      form.classList.add('was-validated');
     }, false);
   });
 })();
@@ -400,15 +402,12 @@ function updateUnitLabels(unitSystem) {
       const label = input.closest('.col-md-4, .col-12')?.querySelector('label');
       if (label) {
         const config = unitConfig[fieldName][unitSystem];
-        label.innerHTML = config.label;
-        
-        // Update placeholder if it exists
-        if (input.placeholder) {
-          const oldValue = parseFloat(input.placeholder);
-          if (!isNaN(oldValue)) {
-            const newValue = convertValue(oldValue.toString(), fieldName, 'metric', unitSystem);
-            input.placeholder = newValue;
-          }
+        // Use textContent instead of innerHTML to prevent XSS
+        const requiredStar = label.querySelector('.text-danger');
+        label.textContent = config.label;
+        // Re-add required star if it existed
+        if (requiredStar) {
+          label.appendChild(requiredStar);
         }
       }
     }
