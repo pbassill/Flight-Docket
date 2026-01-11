@@ -18,6 +18,26 @@ class AircraftRepository
     }
 
     /**
+     * Validate aircraft ID format
+     */
+    private function isValidId(string $id): bool
+    {
+        // aircraft_[timestamp].[random] or aircraft_default_[code] format
+        return preg_match('/^aircraft_(?:default_[a-z0-9]+|[a-f0-9]+\.[0-9]+)$/i', $id) === 1;
+    }
+
+    /**
+     * Get file path for aircraft ID
+     */
+    private function getFilePath(string $id): string
+    {
+        if (!$this->isValidId($id)) {
+            throw new \InvalidArgumentException('Invalid aircraft ID format.');
+        }
+        return $this->storageDir . '/' . $id . '.json';
+    }
+
+    /**
      * Generate a unique aircraft ID
      */
     public function generateId(): string
@@ -30,7 +50,7 @@ class AircraftRepository
      */
     public function save(string $id, array $data): bool
     {
-        $filename = $this->storageDir . '/' . $id . '.json';
+        $filename = $this->getFilePath($id);
         $data['id'] = $id;
         $data['updated_at'] = date('Y-m-d H:i:s');
         
@@ -39,7 +59,12 @@ class AircraftRepository
             return false;
         }
         
-        return file_put_contents($filename, $json) !== false;
+        if (file_put_contents($filename, $json, LOCK_EX) === false) {
+            return false;
+        }
+        
+        chmod($filename, 0640);
+        return true;
     }
 
     /**
@@ -47,7 +72,7 @@ class AircraftRepository
      */
     public function load(string $id): ?array
     {
-        $filename = $this->storageDir . '/' . $id . '.json';
+        $filename = $this->getFilePath($id);
         
         if (!file_exists($filename)) {
             return null;
@@ -99,7 +124,7 @@ class AircraftRepository
      */
     public function delete(string $id): bool
     {
-        $filename = $this->storageDir . '/' . $id . '.json';
+        $filename = $this->getFilePath($id);
         
         if (!file_exists($filename)) {
             return false;
@@ -113,7 +138,11 @@ class AircraftRepository
      */
     public function exists(string $id): bool
     {
-        $filename = $this->storageDir . '/' . $id . '.json';
-        return file_exists($filename);
+        try {
+            $filename = $this->getFilePath($id);
+            return file_exists($filename);
+        } catch (\InvalidArgumentException $e) {
+            return false;
+        }
     }
 }

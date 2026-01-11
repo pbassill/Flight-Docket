@@ -100,6 +100,19 @@ if ($aircraftData['mass_balance']['cg_limits'] !== null) {
         http_response_code(400);
         die('Invalid CG limits JSON format.');
     }
+    
+    // Validate structure
+    if (!is_array($cgLimits)) {
+        http_response_code(400);
+        die('CG limits must be a JSON array.');
+    }
+    
+    foreach ($cgLimits as $limit) {
+        if (!is_array($limit) || !isset($limit['weight']) || !isset($limit['cg_forward']) || !isset($limit['cg_aft'])) {
+            http_response_code(400);
+            die('Each CG limit entry must have weight, cg_forward, and cg_aft properties.');
+        }
+    }
 }
 
 // Save aircraft configuration

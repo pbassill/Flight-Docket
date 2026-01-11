@@ -302,10 +302,14 @@ function deleteAircraft(id, typeCode) {
   form.method = 'POST';
   form.action = 'delete_aircraft.php';
   
+  // Get CSRF token from the main form
+  const mainForm = document.getElementById('aircraftForm');
+  const csrfToken = mainForm.querySelector('input[name="csrf_token"]').value;
+  
   const csrfInput = document.createElement('input');
   csrfInput.type = 'hidden';
   csrfInput.name = 'csrf_token';
-  csrfInput.value = '<?= htmlspecialchars($csrfToken) ?>';
+  csrfInput.value = csrfToken;
   form.appendChild(csrfInput);
   
   const idInput = document.createElement('input');
