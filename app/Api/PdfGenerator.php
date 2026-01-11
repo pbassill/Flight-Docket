@@ -30,7 +30,7 @@ final class PdfGenerator
             $pdf->SetFont('Courier', '', 10);
             
             // METAR
-            if (isset($data['metar']) && is_array($data['metar'])) {
+            if (isset($data['metar']) && is_array($data['metar']) && !empty($data['metar']['data'])) {
                 $pdf->SetFont('Courier', 'B', 10);
                 $pdf->Cell(0, 6, 'METAR:', 0, 1);
                 $pdf->SetFont('Courier', '', 9);
@@ -42,7 +42,7 @@ final class PdfGenerator
             }
             
             // TAF
-            if (isset($data['taf']) && is_array($data['taf'])) {
+            if (isset($data['taf']) && is_array($data['taf']) && !empty($data['taf']['data'])) {
                 $pdf->SetFont('Courier', 'B', 10);
                 $pdf->Cell(0, 6, 'TAF:', 0, 1);
                 $pdf->SetFont('Courier', '', 9);

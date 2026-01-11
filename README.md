@@ -29,7 +29,7 @@ See [API_INTEGRATION.md](API_INTEGRATION.md) for detailed setup instructions.
    ```bash
    export CHECKWX_API_KEY="your-api-key-here"
    ```
-4. Set up web server to serve files from the `app/public` directory
+4. Set up web server to serve files from the `public` directory
 5. Ensure storage directories are writable
 
 ## Requirements

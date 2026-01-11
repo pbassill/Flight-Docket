@@ -256,9 +256,9 @@ $aircraft = [
           
           // Disable file input and show success
           fileInput.disabled = true;
-          button.classList.remove('btn-outline-primary');
-          button.classList.add('btn-success');
-          button.innerHTML = '<i class="fa-solid fa-check me-1"></i>Fetched';
+          btnElement.classList.remove('btn-outline-primary');
+          btnElement.classList.add('btn-success');
+          btnElement.innerHTML = '<i class="fa-solid fa-check me-1"></i>Fetched';
           
           // Show info message
           let infoDiv = document.getElementById(`${inputId}-info`);
@@ -272,8 +272,8 @@ $aircraft = [
         }
       } else {
         alert(`Failed to fetch data: ${result.error || 'Unknown error'}`);
-        button.disabled = false;
-        button.innerHTML = originalText;
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalText;
       }
     } catch (error) {
       alert(`Error fetching data: ${error.message}`);

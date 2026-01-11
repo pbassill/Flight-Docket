@@ -38,7 +38,10 @@ final class NotamApiClient
     {
         $ch = curl_init($url);
         if ($ch === false) {
-            error_log("Notamify API: Failed to initialize cURL for URL: {$url}");
+            // Log only the path without sensitive data
+            $parsedUrl = parse_url($url);
+            $logPath = ($parsedUrl['path'] ?? '/') . (isset($parsedUrl['query']) ? '?...' : '');
+            error_log("Notamify API: Failed to initialize cURL for path: {$logPath}");
             return null;
         }
 
@@ -58,12 +61,16 @@ final class NotamApiClient
         curl_close($ch);
 
         if ($response === false) {
-            error_log("Notamify API: cURL error for URL {$url}: {$error}");
+            $parsedUrl = parse_url($url);
+            $logPath = ($parsedUrl['path'] ?? '/') . (isset($parsedUrl['query']) ? '?...' : '');
+            error_log("Notamify API: cURL error for path {$logPath}: {$error}");
             return null;
         }
 
         if ($httpCode !== 200) {
-            error_log("Notamify API: HTTP {$httpCode} for URL: {$url}");
+            $parsedUrl = parse_url($url);
+            $logPath = ($parsedUrl['path'] ?? '/') . (isset($parsedUrl['query']) ? '?...' : '');
+            error_log("Notamify API: HTTP {$httpCode} for path: {$logPath}");
             return null;
         }
 
