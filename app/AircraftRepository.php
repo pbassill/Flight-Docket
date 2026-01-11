@@ -23,7 +23,7 @@ class AircraftRepository
     private function isValidId(string $id): bool
     {
         // aircraft_[timestamp].[random] or aircraft_default_[code] format
-        return preg_match('/^aircraft_(?:default_[a-z0-9]+|[a-f0-9]+\.[0-9]+)$/i', $id) === 1;
+        return preg_match('/^aircraft_(?:default_[a-zA-Z0-9]+|[a-f0-9]+\.[0-9]+)$/', $id) === 1;
     }
 
     /**

@@ -54,6 +54,11 @@ function getNumeric(string $key): ?float {
     if ($value === '') {
         return null;
     }
+    // Validate that it's actually a number
+    if (!is_numeric($value)) {
+        http_response_code(400);
+        die("Invalid numeric value for field: {$key}");
+    }
     return (float)$value;
 }
 
@@ -108,9 +113,12 @@ if ($aircraftData['mass_balance']['cg_limits'] !== null) {
     }
     
     foreach ($cgLimits as $limit) {
-        if (!is_array($limit) || !isset($limit['weight']) || !isset($limit['cg_forward']) || !isset($limit['cg_aft'])) {
+        if (!is_array($limit) || 
+            !isset($limit['weight']) || !is_numeric($limit['weight']) ||
+            !isset($limit['cg_forward']) || !is_numeric($limit['cg_forward']) ||
+            !isset($limit['cg_aft']) || !is_numeric($limit['cg_aft'])) {
             http_response_code(400);
-            die('Each CG limit entry must have weight, cg_forward, and cg_aft properties.');
+            die('Each CG limit entry must have numeric weight, cg_forward, and cg_aft properties.');
         }
     }
 }
