@@ -7,6 +7,7 @@ namespace OTR;
 final class AlternatesFinder
 {
     private array $airports = [];
+    private array $airportIndex = [];
 
     public function __construct()
     {
@@ -26,6 +27,13 @@ final class AlternatesFinder
         }
         
         $this->airports = $decoded;
+        
+        // Create index for O(1) lookups by ICAO code
+        foreach ($this->airports as $airport) {
+            if (isset($airport['icao'])) {
+                $this->airportIndex[strtoupper($airport['icao'])] = $airport;
+            }
+        }
     }
 
     /**
@@ -101,19 +109,15 @@ final class AlternatesFinder
     }
 
     /**
-     * Find airport by ICAO code
+     * Find airport by ICAO code using indexed lookup
      * 
      * @param string $icao ICAO code
      * @return array|null Airport data or null if not found
      */
     private function findAirport(string $icao): ?array
     {
-        foreach ($this->airports as $airport) {
-            if ($airport['icao'] === strtoupper($icao)) {
-                return $airport;
-            }
-        }
-        return null;
+        $icaoUpper = strtoupper($icao);
+        return $this->airportIndex[$icaoUpper] ?? null;
     }
 
     /**

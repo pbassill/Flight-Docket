@@ -91,7 +91,6 @@
   {"icao": "EGTB", "name": "Wycombe Air Park", "lat": 51.6117, "lon": -0.8083},
   {"icao": "EGTC", "name": "Cranfield", "lat": 52.0722, "lon": -0.6167},
   {"icao": "EGTD", "name": "Dunsfold", "lat": 51.1181, "lon": -0.5347},
-  {"icao": "EGTE", "name": "Exeter", "lat": 50.7344, "lon": -3.4139},
   {"icao": "EGTF", "name": "Fairoaks", "lat": 51.3481, "lon": -0.5589},
   {"icao": "EGTG", "name": "Filton", "lat": 51.5194, "lon": -2.5908},
   {"icao": "EGTH", "name": "Old Warden", "lat": 52.0889, "lon": -0.3250},
