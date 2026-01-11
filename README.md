@@ -15,10 +15,11 @@ A flight docket generation system for OTR Aviation that creates comprehensive PD
 
 ## API Integration
 
-The application now supports automatic fetching of weather and NOTAM data:
+The application now supports automatic fetching of weather, NOTAM, and chart data:
 
 - **CheckWX API**: Fetch METAR, TAF, and SIGMET data for departure, destination, and alternate airfields
 - **Notamify API**: Fetch NOTAMs for all specified airfields
+- **AIP España**: Fetch aerodrome charts (VAC/ADC/PDC) for Spanish airports (ICAO codes starting with LE)
 
 See [API_INTEGRATION.md](API_INTEGRATION.md) for detailed setup instructions.
 
