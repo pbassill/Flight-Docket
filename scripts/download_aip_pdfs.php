@@ -67,7 +67,7 @@ foreach ($args as $arg) {
 }
 
 // Initialize the crawler
-$storageBasePath = $config['paths']['storage'] . '/aip';
+$storageBasePath = $config['paths']['aip'];
 
 // Ensure storage directory exists
 if (!is_dir($storageBasePath) && !mkdir($storageBasePath, 0755, true)) {

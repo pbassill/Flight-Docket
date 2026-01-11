@@ -186,7 +186,8 @@ final class AipCrawler
     {
         $ch = curl_init($url);
         if ($ch === false) {
-            error_log("AIP Crawler: Failed to initialize cURL for: {$url}");
+            $logPath = $this->sanitizeUrlForLogging($url);
+            error_log("AIP Crawler: Failed to initialize cURL for path: {$logPath}");
             return null;
         }
 
@@ -206,12 +207,14 @@ final class AipCrawler
         curl_close($ch);
 
         if ($response === false) {
-            error_log("AIP Crawler: cURL error for {$url}: {$error}");
+            $logPath = $this->sanitizeUrlForLogging($url);
+            error_log("AIP Crawler: cURL error for path {$logPath}: {$error}");
             return null;
         }
 
         if ($httpCode !== 200) {
-            error_log("AIP Crawler: HTTP {$httpCode} for: {$url}");
+            $logPath = $this->sanitizeUrlForLogging($url);
+            error_log("AIP Crawler: HTTP {$httpCode} for path: {$logPath}");
             return null;
         }
 
@@ -229,9 +232,10 @@ final class AipCrawler
     {
         $ch = curl_init($url);
         if ($ch === false) {
+            $logPath = $this->sanitizeUrlForLogging($url);
             return [
                 'success' => false,
-                'message' => "Failed to initialize cURL for: {$url}"
+                'message' => "Failed to initialize cURL for path: {$logPath}"
             ];
         }
 
@@ -331,5 +335,18 @@ final class AipCrawler
         $filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
 
         return $filename;
+    }
+
+    /**
+     * Sanitize URL for logging (remove sensitive information)
+     * 
+     * @param string $url URL to sanitize
+     * @return string Sanitized URL path for logging
+     */
+    private function sanitizeUrlForLogging(string $url): string
+    {
+        $parsedUrl = parse_url($url);
+        $logPath = ($parsedUrl['path'] ?? '/') . (isset($parsedUrl['query']) ? '?...' : '');
+        return $logPath;
     }
 }
