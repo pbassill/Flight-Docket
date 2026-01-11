@@ -115,8 +115,8 @@ final class AipEspanaApiClient
             return null;
         }
 
-        // Verify PDF magic number
-        if (!str_starts_with($response, '%PDF')) {
+        // Verify PDF magic number and minimum size
+        if (strlen($response) < 5 || !str_starts_with($response, '%PDF')) {
             return null;
         }
 

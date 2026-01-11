@@ -89,25 +89,34 @@ try {
     }
     $tempFile .= '.pdf';
     
-    PdfGenerator::mergeChartPdfs($chartsData, $tempFile);
-    
-    // Store file in session
-    if (!isset($_SESSION['api_files'])) {
-        $_SESSION['api_files'] = [];
+    try {
+        PdfGenerator::mergeChartPdfs($chartsData, $tempFile);
+        
+        // Store file in session
+        if (!isset($_SESSION['api_files'])) {
+            $_SESSION['api_files'] = [];
+        }
+        $fileKey = "charts_{$chartType}_" . time() . '_' . bin2hex(random_bytes(4)) . '.pdf';
+        $_SESSION['api_files'][$fileKey] = $tempFile;
+        
+        $result = [
+            'success' => true,
+            'file_key' => $fileKey,
+            'filename' => "charts_{$icao}.pdf",
+            'charts_found' => count($chartsData),
+        ];
+        
+        // Return success
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        
+    } catch (\Exception $e) {
+        // Clean up temp file on error
+        if (file_exists($tempFile)) {
+            unlink($tempFile);
+        }
+        throw $e;
     }
-    $fileKey = "charts_{$chartType}_" . time() . '_' . bin2hex(random_bytes(4)) . '.pdf';
-    $_SESSION['api_files'][$fileKey] = $tempFile;
-    
-    $result = [
-        'success' => true,
-        'file_key' => $fileKey,
-        'filename' => "charts_{$icao}.pdf",
-        'charts_found' => count($chartsData),
-    ];
-    
-    // Return success
-    header('Content-Type: application/json');
-    echo json_encode($result);
     
 } catch (\Exception $e) {
     http_response_code(500);

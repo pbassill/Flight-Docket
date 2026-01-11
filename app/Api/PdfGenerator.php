@@ -148,7 +148,10 @@ final class PdfGenerator
     }
 
     /**
-     * Merge multiple chart PDFs from AIP España into a single PDF
+     * Save the first chart PDF from AIP España data
+     * 
+     * Note: Currently only saves the first chart. Future enhancement could
+     * merge multiple PDFs using FPDI library.
      * 
      * @param array $chartsData Array of chart data from AIP España
      * @param string $outputPath Path where merged PDF should be saved
@@ -160,7 +163,7 @@ final class PdfGenerator
         }
 
         // For now, save the first chart PDF directly
-        // In a production system, you might want to merge multiple PDFs using FPDI
+        // Future enhancement: merge multiple PDFs using FPDI
         $firstChart = reset($chartsData);
         if (!isset($firstChart['content'])) {
             throw new \RuntimeException('Invalid chart data: missing content');

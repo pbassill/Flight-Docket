@@ -329,7 +329,7 @@ $aircraft = [
 
       if (data.success && data.file_key) {
         // Create a hidden input to store the file key
-        const existingInput = document.querySelector(`input[name="${chartType}_api_key"]`);
+        const existingInput = document.querySelector(`input[name="charts_${chartType}_api_key"]`);
         if (existingInput) {
           existingInput.remove();
         }
