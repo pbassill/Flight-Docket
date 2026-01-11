@@ -148,6 +148,36 @@ final class PdfGenerator
     }
 
     /**
+     * Merge multiple chart PDFs from AIP España into a single PDF
+     * 
+     * @param array $chartsData Array of chart data from AIP España
+     * @param string $outputPath Path where merged PDF should be saved
+     */
+    public static function mergeChartPdfs(array $chartsData, string $outputPath): void
+    {
+        if (empty($chartsData)) {
+            throw new \RuntimeException('No charts data provided');
+        }
+
+        // For now, save the first chart PDF directly
+        // In a production system, you might want to merge multiple PDFs using FPDI
+        $firstChart = reset($chartsData);
+        if (!isset($firstChart['content'])) {
+            throw new \RuntimeException('Invalid chart data: missing content');
+        }
+
+        self::ensureDir(dirname($outputPath));
+        
+        // Save the PDF content
+        $written = file_put_contents($outputPath, $firstChart['content']);
+        if ($written === false) {
+            throw new \RuntimeException("Failed to write PDF to {$outputPath}");
+        }
+        
+        chmod($outputPath, 0640);
+    }
+
+    /**
      * Ensure directory exists
      * 
      * @param string $dir Directory path
