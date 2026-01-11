@@ -24,7 +24,10 @@ $recent = $repo->listRecent(25);
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container">
     <span class="navbar-brand"><i class="fa-solid fa-plane-departure me-2"></i>OTR Aviation Flight Docket</span>
-    <a class="btn btn-primary btn-sm" href="create.php"><i class="fa-solid fa-plus me-1"></i>Create</a>
+    <div>
+      <a class="btn btn-outline-light btn-sm me-2" href="configure_aircraft.php"><i class="fa-solid fa-plane me-1"></i>Configure Aircraft</a>
+      <a class="btn btn-primary btn-sm" href="create.php"><i class="fa-solid fa-plus me-1"></i>Create</a>
+    </div>
   </div>
 </nav>
 
