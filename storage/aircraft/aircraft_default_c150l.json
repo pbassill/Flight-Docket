@@ -1,0 +1,30 @@
+{
+    "id": "aircraft_default_c150l",
+    "type_code": "C150L",
+    "name": "Cessna FRA150L",
+    "updated_at": "2026-01-11 20:20:00",
+    "mass_balance": {
+        "empty_weight": 489,
+        "empty_moment_arm": 2.49,
+        "max_takeoff_weight": 726,
+        "max_landing_weight": 726,
+        "pilot_moment_arm": 2.18,
+        "passenger_moment_arm": 2.18,
+        "baggage_moment_arm": 3.00,
+        "fuel_moment_arm": 2.85,
+        "max_fuel_capacity": 80.0,
+        "cg_limits": "[{\"weight\": 480, \"cg_forward\": 2.05, \"cg_aft\": 2.52}, {\"weight\": 726, \"cg_forward\": 2.00, \"cg_aft\": 2.52}]"
+    },
+    "performance": {
+        "cruise_speed": 106,
+        "stall_speed": 42,
+        "climb_rate": 670,
+        "takeoff_distance": 475,
+        "landing_distance": 395,
+        "service_ceiling": 14000,
+        "fuel_consumption": 21.5,
+        "range": 395,
+        "endurance": 4.2,
+        "notes": "FRA150L (Reims-built under license). Performance data at sea level, ISA conditions."
+    }
+}

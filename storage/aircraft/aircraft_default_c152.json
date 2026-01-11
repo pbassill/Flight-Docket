@@ -1,0 +1,30 @@
+{
+    "id": "aircraft_default_c152",
+    "type_code": "C152",
+    "name": "Cessna 152",
+    "updated_at": "2026-01-11 20:20:00",
+    "mass_balance": {
+        "empty_weight": 507,
+        "empty_moment_arm": 2.52,
+        "max_takeoff_weight": 757,
+        "max_landing_weight": 757,
+        "pilot_moment_arm": 2.21,
+        "passenger_moment_arm": 2.21,
+        "baggage_moment_arm": 3.05,
+        "fuel_moment_arm": 2.90,
+        "max_fuel_capacity": 87.1,
+        "cg_limits": "[{\"weight\": 500, \"cg_forward\": 2.08, \"cg_aft\": 2.54}, {\"weight\": 757, \"cg_forward\": 2.03, \"cg_aft\": 2.54}]"
+    },
+    "performance": {
+        "cruise_speed": 107,
+        "stall_speed": 43,
+        "climb_rate": 715,
+        "takeoff_distance": 450,
+        "landing_distance": 380,
+        "service_ceiling": 14700,
+        "fuel_consumption": 22.5,
+        "range": 415,
+        "endurance": 4.5,
+        "notes": "Performance data at sea level, standard atmosphere. Adjust for weight, altitude, and temperature."
+    }
+}

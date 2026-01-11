@@ -1,0 +1,30 @@
+{
+    "id": "aircraft_default_c140",
+    "type_code": "C140",
+    "name": "Cessna 140",
+    "updated_at": "2026-01-11 20:20:00",
+    "mass_balance": {
+        "empty_weight": 442,
+        "empty_moment_arm": 2.45,
+        "max_takeoff_weight": 680,
+        "max_landing_weight": 680,
+        "pilot_moment_arm": 2.15,
+        "passenger_moment_arm": 2.15,
+        "baggage_moment_arm": 2.95,
+        "fuel_moment_arm": 2.80,
+        "max_fuel_capacity": 75.7,
+        "cg_limits": "[{\"weight\": 440, \"cg_forward\": 2.00, \"cg_aft\": 2.48}, {\"weight\": 680, \"cg_forward\": 1.95, \"cg_aft\": 2.48}]"
+    },
+    "performance": {
+        "cruise_speed": 105,
+        "stall_speed": 40,
+        "climb_rate": 640,
+        "takeoff_distance": 480,
+        "landing_distance": 400,
+        "service_ceiling": 15500,
+        "fuel_consumption": 20.0,
+        "range": 450,
+        "endurance": 4.8,
+        "notes": "Vintage aircraft. Performance varies with condition and modifications."
+    }
+}
