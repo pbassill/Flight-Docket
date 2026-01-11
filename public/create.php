@@ -154,39 +154,8 @@ $aircraft = [
               <input type="hidden" name="metar_taf_api_key" id="metar-taf-api-key">
             </div>
 
-            <div class="mb-3">
-              <label class="form-label"><i class="fa-solid fa-map me-1"></i>Charts pack: Departure (VAC/ADC/PDC/Aerodrome data) (mandatory, PDF)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="charts_departure" accept="application/pdf" required id="charts-departure-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-charts-departure">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
-              <div class="invalid-feedback">Departure charts pack is required.</div>
-              <div class="form-text" id="charts-departure-help"></div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label"><i class="fa-solid fa-map-location-dot me-1"></i>Charts pack: Destination (VAC/ADC/PDC/Aerodrome data) (mandatory, PDF)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="charts_destination" accept="application/pdf" required id="charts-destination-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-charts-destination">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
-              <div class="invalid-feedback">Destination charts pack is required.</div>
-              <div class="form-text" id="charts-destination-help"></div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label"><i class="fa-solid fa-map-pin me-1"></i>Charts pack: Alternates (single combined PDF, optional)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="charts_alternates" accept="application/pdf" id="charts-alternates-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-charts-alternates">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
-              <div class="form-text" id="charts-alternates-help"></div>
+            <div class="alert alert-info" role="alert">
+              <i class="fa-solid fa-info-circle me-2"></i><strong>Charts:</strong> Aerodrome charts (VAC/ADC/PDC/Aerodrome data) for departure, destination, and alternates will be automatically included from AIP storage.
             </div>
 
             <button class="btn btn-primary btn-lg mt-2" type="submit">
