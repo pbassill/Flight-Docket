@@ -129,32 +129,66 @@ $stored = [];
 
 $uploadCfg = $config['uploads'];
 
-foreach ($requiredFiles as $field => $filename) {
-    $file = $_FILES[$field] ?? null;
-    if (!is_array($file) || !Uploads::isPdfUpload($file, $uploadCfg)) {
-        http_response_code(400);
-        echo "Missing or invalid required upload: {$field}";
-        exit;
+// Helper function to get API file info
+function getApiFileInfo(string $field): ?array {
+    $apiKey = $_POST["{$field}_api_key"] ?? '';
+    if (empty($apiKey) || !isset($_SESSION['api_files'][$apiKey])) {
+        return null;
     }
+    return [
+        'key' => $apiKey,
+        'path' => $_SESSION['api_files'][$apiKey],
+    ];
+}
+
+// Helper function to process file (API or upload)
+function processFile(string $field, string $filename, string $uploadDir, array $uploadCfg, bool $required): ?string {
+    // Check if file was fetched via API
+    $apiInfo = getApiFileInfo($field);
+    if ($apiInfo !== null) {
+        $apiFilePath = $apiInfo['path'];
+        if (is_file($apiFilePath)) {
+            $dest = "{$uploadDir}/{$filename}";
+            copy($apiFilePath, $dest);
+            chmod($dest, 0640);
+            // Clean up temp file
+            unlink($apiFilePath);
+            unset($_SESSION['api_files'][$apiInfo['key']]);
+            return $dest;
+        }
+    }
+    
+    // Otherwise, handle as regular upload
+    $file = $_FILES[$field] ?? null;
+    
+    if ($required) {
+        if (!is_array($file) || !Uploads::isPdfUpload($file, $uploadCfg)) {
+            http_response_code(400);
+            echo "Missing or invalid required upload: {$field}";
+            exit;
+        }
+    } else {
+        if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+        if (!Uploads::isPdfUpload($file, $uploadCfg)) {
+            http_response_code(400);
+            echo "Invalid optional upload (must be PDF): {$field}";
+            exit;
+        }
+    }
+    
     $dest = "{$uploadDir}/{$filename}";
     Uploads::moveUploadedPdf($file, $dest);
-    $stored[$field] = $dest;
+    return $dest;
+}
+
+foreach ($requiredFiles as $field => $filename) {
+    $stored[$field] = processFile($field, $filename, $uploadDir, $uploadCfg, true);
 }
 
 foreach ($optionalFiles as $field => $filename) {
-    $file = $_FILES[$field] ?? null;
-    if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
-        $stored[$field] = null;
-        continue;
-    }
-    if (!Uploads::isPdfUpload($file, $uploadCfg)) {
-        http_response_code(400);
-        echo "Invalid optional upload (must be PDF): {$field}";
-        exit;
-    }
-    $dest = "{$uploadDir}/{$filename}";
-    Uploads::moveUploadedPdf($file, $dest);
-    $stored[$field] = $dest;
+    $stored[$field] = processFile($field, $filename, $uploadDir, $uploadCfg, false);
 }
 
 $generatedPath = rtrim($config['paths']['generated'], '/') . "/{$id}.pdf";

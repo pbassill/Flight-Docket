@@ -1,0 +1,33 @@
+# Dependencies
+/vendor/
+
+# Storage and uploads
+/storage/uploads/*
+/storage/dockets/*
+/storage/generated/*
+/storage/logs/*
+!/storage/.gitkeep
+!/storage/uploads/.gitkeep
+!/storage/dockets/.gitkeep
+!/storage/generated/.gitkeep
+!/storage/logs/.gitkeep
+
+# Environment variables
+.env
+.env.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp

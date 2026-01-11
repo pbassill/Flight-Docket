@@ -119,13 +119,23 @@ $aircraft = [
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-triangle-exclamation me-1"></i>NOTAMs (mandatory, PDF)</label>
               <div class="form-text">Include EGMA or LEGR and any destinations/alternates as applicable.</div>
-              <input class="form-control" type="file" name="notams" accept="application/pdf" required>
+              <div class="input-group">
+                <input class="form-control" type="file" name="notams" accept="application/pdf" required id="notams-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-notams">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
               <div class="invalid-feedback">NOTAMs are required.</div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label"><i class="fa-solid fa-cloud-sun-rain me-1"></i>SIGWX (PDF)</label>
-              <input class="form-control" type="file" name="sigwx" accept="application/pdf">
+              <label class="form-label"><i class="fa-solid fa-cloud-sun-rain me-1"></i>SIGWX/SIGMET (PDF)</label>
+              <div class="input-group">
+                <input class="form-control" type="file" name="sigwx" accept="application/pdf" id="sigwx-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-sigmet">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
             </div>
 
             <div class="mb-3">
@@ -135,7 +145,12 @@ $aircraft = [
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-cloud me-1"></i>METAR &amp; TAF (PDF)</label>
-              <input class="form-control" type="file" name="metar_taf" accept="application/pdf">
+              <div class="input-group">
+                <input class="form-control" type="file" name="metar_taf" accept="application/pdf" id="metar-taf-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-metar-taf">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
             </div>
 
             <div class="mb-3">
@@ -187,6 +202,96 @@ $aircraft = [
       }
       form.classList.add('was-validated');
     }, false);
+  });
+
+  // API fetch functionality
+  const fetchApiData = async (dataType, inputId, btnElement) => {
+    const departure = document.querySelector('input[name="departure"]').value;
+    const destination = document.querySelector('input[name="destination"]').value;
+    const alternates = document.querySelector('input[name="alternates"]').value;
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+    if (!departure || !destination) {
+      alert('Please enter departure and destination ICAO codes first.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('departure', departure);
+    formData.append('destination', destination);
+    formData.append('alternates', alternates);
+    formData.append('data_type', dataType);
+    formData.append('csrf_token', csrfToken);
+
+    try {
+      const button = btnElement;
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Fetching...';
+
+      const response = await fetch('fetch_weather.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.file_key) {
+        // Store the file key in a hidden field
+        const fileInput = document.getElementById(inputId);
+        if (fileInput) {
+          // Remove required attribute
+          fileInput.removeAttribute('required');
+          
+          // Add hidden input for API file key
+          let hiddenInput = document.getElementById(`${inputId}-api-key`);
+          if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = `${inputId}-api-key`;
+            hiddenInput.name = `${inputId.replace('-file', '')}_api_key`;
+            fileInput.parentNode.insertBefore(hiddenInput, fileInput.nextSibling);
+          }
+          hiddenInput.value = result.file_key;
+          
+          // Disable file input and show success
+          fileInput.disabled = true;
+          btnElement.classList.remove('btn-outline-primary');
+          btnElement.classList.add('btn-success');
+          btnElement.innerHTML = '<i class="fa-solid fa-check me-1"></i>Fetched';
+          
+          // Show info message
+          let infoDiv = document.getElementById(`${inputId}-info`);
+          if (!infoDiv) {
+            infoDiv = document.createElement('div');
+            infoDiv.id = `${inputId}-info`;
+            infoDiv.className = 'form-text text-success mt-1';
+            fileInput.parentNode.appendChild(infoDiv);
+          }
+          infoDiv.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>Data fetched from API successfully. File upload disabled.`;
+        }
+      } else {
+        alert(`Failed to fetch data: ${result.error || 'Unknown error'}`);
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalText;
+      }
+    } catch (error) {
+      alert(`Error fetching data: ${error.message}`);
+      btnElement.disabled = false;
+      btnElement.innerHTML = originalText;
+    }
+  };
+
+  document.getElementById('fetch-metar-taf')?.addEventListener('click', (e) => {
+    fetchApiData('metar_taf', 'metar-taf-file', e.target);
+  });
+
+  document.getElementById('fetch-sigmet')?.addEventListener('click', (e) => {
+    fetchApiData('sigmet', 'sigwx-file', e.target);
+  });
+
+  document.getElementById('fetch-notams')?.addEventListener('click', (e) => {
+    fetchApiData('notams', 'notams-file', e.target);
   });
 })();
 </script>
