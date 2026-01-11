@@ -56,8 +56,9 @@ function getNumeric(string $key): ?float {
     }
     // Validate that it's actually a number
     if (!is_numeric($value)) {
+        error_log("Invalid numeric value for field: {$key}");
         http_response_code(400);
-        die("Invalid numeric value for field: {$key}");
+        die('Invalid numeric input provided.');
     }
     return (float)$value;
 }

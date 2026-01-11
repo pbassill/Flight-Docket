@@ -22,8 +22,8 @@ class AircraftRepository
      */
     private function isValidId(string $id): bool
     {
-        // aircraft_[timestamp].[random] or aircraft_default_[code] format
-        return preg_match('/^aircraft_(?:default_[a-zA-Z0-9]+|[a-f0-9]+\.[0-9]+)$/', $id) === 1;
+        // aircraft_[24 hex chars] or aircraft_default_[code] format
+        return preg_match('/^aircraft_(?:default_[a-zA-Z0-9]+|[a-f0-9]{24})$/', $id) === 1;
     }
 
     /**
@@ -42,7 +42,7 @@ class AircraftRepository
      */
     public function generateId(): string
     {
-        return uniqid('aircraft_', true);
+        return 'aircraft_' . bin2hex(random_bytes(12));
     }
 
     /**

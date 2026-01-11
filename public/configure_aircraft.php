@@ -304,12 +304,21 @@ function deleteAircraft(id, typeCode) {
   
   // Get CSRF token from the main form
   const mainForm = document.getElementById('aircraftForm');
-  const csrfToken = mainForm.querySelector('input[name="csrf_token"]').value;
+  if (!mainForm) {
+    alert('Error: Form not found');
+    return;
+  }
+  
+  const csrfTokenInput = mainForm.querySelector('input[name="csrf_token"]');
+  if (!csrfTokenInput) {
+    alert('Error: CSRF token not found');
+    return;
+  }
   
   const csrfInput = document.createElement('input');
   csrfInput.type = 'hidden';
   csrfInput.name = 'csrf_token';
-  csrfInput.value = csrfToken;
+  csrfInput.value = csrfTokenInput.value;
   form.appendChild(csrfInput);
   
   const idInput = document.createElement('input');
