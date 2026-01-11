@@ -301,105 +301,73 @@ $aircraft = [
       fetchAllHelp.textContent = 'Fetching data from APIs...';
       fetchAllHelp.className = 'form-text text-muted';
 
+      // Helper function to set feedback
+      const setFeedback = (inputElement, message) => {
+        inputElement.classList.add('is-valid');
+        // Remove any existing feedback first
+        const existingFeedback = inputElement.parentElement.querySelector('.valid-feedback');
+        if (existingFeedback) {
+          existingFeedback.remove();
+        }
+        inputElement.parentElement.insertAdjacentHTML('beforeend', 
+          `<div class="valid-feedback">${message}</div>`);
+      };
+
+      // Helper function to fetch data
+      const fetchData = async (dataType) => {
+        const formData = new FormData();
+        formData.append('csrf_token', csrfToken);
+        formData.append('departure', departure);
+        formData.append('destination', destination);
+        formData.append('alternates', alternates);
+        formData.append('data_type', dataType);
+
+        const response = await fetch('fetch_weather.php', {
+          method: 'POST',
+          body: formData
+        });
+        return response.json();
+      };
+
       const results = {
         metar_taf: false,
         sigmet: false,
         notams: false
       };
 
-      // Fetch METAR/TAF
-      try {
-        const formData = new FormData();
-        formData.append('csrf_token', csrfToken);
-        formData.append('departure', departure);
-        formData.append('destination', destination);
-        formData.append('alternates', alternates);
-        formData.append('data_type', 'metar_taf');
+      // Fetch all data types in parallel
+      const [metarTafResult, sigmetResult, notamsResult] = await Promise.allSettled([
+        fetchData('metar_taf'),
+        fetchData('sigmet'),
+        fetchData('notams')
+      ]);
 
-        const response = await fetch('fetch_weather.php', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await response.json();
-
-        if (data.success && data.file_key) {
-          metarTafApiKey.value = data.file_key;
-          // Create a visual indicator that file was fetched
-          metarTafFileInput.classList.add('is-valid');
-          // Remove any existing feedback first
-          const existingFeedback = metarTafFileInput.parentElement.querySelector('.valid-feedback');
-          if (existingFeedback) {
-            existingFeedback.remove();
-          }
-          metarTafFileInput.parentElement.insertAdjacentHTML('beforeend', 
-            '<div class="valid-feedback">METAR/TAF data fetched from API</div>');
-          results.metar_taf = true;
-        }
-      } catch (error) {
-        console.error('Error fetching METAR/TAF:', error);
+      // Process METAR/TAF result
+      if (metarTafResult.status === 'fulfilled' && metarTafResult.value.success && metarTafResult.value.file_key) {
+        metarTafApiKey.value = metarTafResult.value.file_key;
+        setFeedback(metarTafFileInput, 'METAR/TAF data fetched from API');
+        results.metar_taf = true;
+      } else if (metarTafResult.status === 'rejected') {
+        console.error('Error fetching METAR/TAF:', metarTafResult.reason);
       }
 
-      // Fetch SIGMET
-      try {
-        const formData = new FormData();
-        formData.append('csrf_token', csrfToken);
-        formData.append('departure', departure);
-        formData.append('destination', destination);
-        formData.append('alternates', alternates);
-        formData.append('data_type', 'sigmet');
-
-        const response = await fetch('fetch_weather.php', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await response.json();
-
-        if (data.success && data.file_key) {
-          sigwxApiKey.value = data.file_key;
-          sigwxFileInput.classList.add('is-valid');
-          // Remove any existing feedback first
-          const existingFeedback = sigwxFileInput.parentElement.querySelector('.valid-feedback');
-          if (existingFeedback) {
-            existingFeedback.remove();
-          }
-          sigwxFileInput.parentElement.insertAdjacentHTML('beforeend', 
-            '<div class="valid-feedback">SIGMET data fetched from API</div>');
-          results.sigmet = true;
-        }
-      } catch (error) {
-        console.error('Error fetching SIGMET:', error);
+      // Process SIGMET result
+      if (sigmetResult.status === 'fulfilled' && sigmetResult.value.success && sigmetResult.value.file_key) {
+        sigwxApiKey.value = sigmetResult.value.file_key;
+        setFeedback(sigwxFileInput, 'SIGMET data fetched from API');
+        results.sigmet = true;
+      } else if (sigmetResult.status === 'rejected') {
+        console.error('Error fetching SIGMET:', sigmetResult.reason);
       }
 
-      // Fetch NOTAMs
-      try {
-        const formData = new FormData();
-        formData.append('csrf_token', csrfToken);
-        formData.append('departure', departure);
-        formData.append('destination', destination);
-        formData.append('alternates', alternates);
-        formData.append('data_type', 'notams');
-
-        const response = await fetch('fetch_weather.php', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await response.json();
-
-        if (data.success && data.file_key) {
-          notamsApiKey.value = data.file_key;
-          notamsFileInput.classList.add('is-valid');
-          notamsFileInput.removeAttribute('required');
-          // Remove any existing feedback first
-          const existingFeedback = notamsFileInput.parentElement.querySelector('.valid-feedback');
-          if (existingFeedback) {
-            existingFeedback.remove();
-          }
-          notamsFileInput.parentElement.insertAdjacentHTML('beforeend', 
-            '<div class="valid-feedback">NOTAMs data fetched from API</div>');
-          results.notams = true;
-        }
-      } catch (error) {
-        console.error('Error fetching NOTAMs:', error);
+      // Process NOTAMs result
+      if (notamsResult.status === 'fulfilled' && notamsResult.value.success && notamsResult.value.file_key) {
+        notamsApiKey.value = notamsResult.value.file_key;
+        notamsFileInput.removeAttribute('required');
+        setFeedback(notamsFileInput, 'NOTAMs data fetched from API');
+        results.notams = true;
+      } else if (notamsResult.status === 'rejected') {
+        console.error('Error fetching NOTAMs:', notamsResult.reason);
       }
 
       // Show results
