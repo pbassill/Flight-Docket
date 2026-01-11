@@ -9,6 +9,7 @@ use OTR\Uploads;
 use OTR\Pdf\PdfBuilder;
 use OTR\Security;
 use OTR\ErrorHandler;
+use OTR\AipCharts;
 
 $config = require __DIR__ . '/../config.php';
 date_default_timezone_set($config['timezone']);
@@ -113,8 +114,6 @@ $requiredFiles = [
     'mass_balance'         => 'mass_balance.pdf',
     'performance'          => 'performance.pdf',
     'notams'               => 'notams.pdf',
-    'charts_departure'     => 'charts_departure.pdf',
-    'charts_destination'   => 'charts_destination.pdf',
 ];
 
 $optionalFiles = [
@@ -122,7 +121,6 @@ $optionalFiles = [
     'sigwx'                   => 'sigwx.pdf',
     'winds'                   => 'winds.pdf',
     'metar_taf'               => 'metar_taf.pdf',
-    'charts_alternates'       => 'charts_alternates.pdf',
 ];
 
 $stored = [];
@@ -189,6 +187,45 @@ foreach ($requiredFiles as $field => $filename) {
 
 foreach ($optionalFiles as $field => $filename) {
     $stored[$field] = processFile($field, $filename, $uploadDir, $uploadCfg, false);
+}
+
+// Gather charts from AIP storage
+$aipBasePath = $config['paths']['aip'];
+
+// Departure charts
+$departureCharts = AipCharts::getChartPack($departure, $aipBasePath);
+$stored['charts_departure'] = null;
+if (!empty($departureCharts)) {
+    $chartsDeparturePath = "{$uploadDir}/charts_departure.pdf";
+    if (AipCharts::mergeCharts($departureCharts, $chartsDeparturePath)) {
+        $stored['charts_departure'] = $chartsDeparturePath;
+    }
+}
+
+// Destination charts
+$destinationCharts = AipCharts::getChartPack($destination, $aipBasePath);
+$stored['charts_destination'] = null;
+if (!empty($destinationCharts)) {
+    $chartsDestinationPath = "{$uploadDir}/charts_destination.pdf";
+    if (AipCharts::mergeCharts($destinationCharts, $chartsDestinationPath)) {
+        $stored['charts_destination'] = $chartsDestinationPath;
+    }
+}
+
+// Alternates charts
+$stored['charts_alternates'] = null;
+if (!empty($alternatesArray)) {
+    $allAlternateCharts = [];
+    foreach ($alternatesArray as $altIcao) {
+        $altCharts = AipCharts::getChartPack($altIcao, $aipBasePath);
+        $allAlternateCharts = array_merge($allAlternateCharts, $altCharts);
+    }
+    if (!empty($allAlternateCharts)) {
+        $chartsAlternatesPath = "{$uploadDir}/charts_alternates.pdf";
+        if (AipCharts::mergeCharts($allAlternateCharts, $chartsAlternatesPath)) {
+            $stored['charts_alternates'] = $chartsAlternatesPath;
+        }
+    }
 }
 
 $generatedPath = rtrim($config['paths']['generated'], '/') . "/{$id}.pdf";

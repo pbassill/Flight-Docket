@@ -13,6 +13,7 @@ return [
         'generated' => __DIR__ . '/storage/generated',
         'logo'      => __DIR__ . '/public/assets/otr-logo.png',
         'logs'      => __DIR__ . '/storage/logs',
+        'aip'       => __DIR__ . '/storage/aip',
     ],
 
     'uploads' => [

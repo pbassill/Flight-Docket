@@ -159,21 +159,8 @@ $aircraft = [
               </div>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label"><i class="fa-solid fa-map me-1"></i>Charts pack: Departure (VAC/ADC/PDC/Aerodrome data) (mandatory, PDF)</label>
-              <input class="form-control" type="file" name="charts_departure" accept="application/pdf" required>
-              <div class="invalid-feedback">Departure charts pack is required.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label"><i class="fa-solid fa-map-location-dot me-1"></i>Charts pack: Destination (VAC/ADC/PDC/Aerodrome data) (mandatory, PDF)</label>
-              <input class="form-control" type="file" name="charts_destination" accept="application/pdf" required>
-              <div class="invalid-feedback">Destination charts pack is required.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label"><i class="fa-solid fa-map-pin me-1"></i>Charts pack: Alternates (single combined PDF, optional)</label>
-              <input class="form-control" type="file" name="charts_alternates" accept="application/pdf">
+            <div class="alert alert-info" role="alert">
+              <i class="fa-solid fa-info-circle me-2"></i><strong>Charts:</strong> Aerodrome charts (VAC/ADC/PDC/Aerodrome data) for departure, destination, and alternates will be automatically included from AIP storage.
             </div>
 
             <button class="btn btn-primary btn-lg mt-2" type="submit">
