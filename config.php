@@ -24,4 +24,16 @@ return [
             'pdf',
         ],
     ],
+
+    'apis' => [
+        'checkwx' => [
+            'enabled' => true,
+            'api_key' => getenv('CHECKWX_API_KEY') ?: '',
+            'base_url' => 'https://api.checkwx.com',
+        ],
+        'notamify' => [
+            'enabled' => true,
+            'base_url' => 'https://api.notamify.com/v1',
+        ],
+    ],
 ];

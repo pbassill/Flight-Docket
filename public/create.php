@@ -125,13 +125,23 @@ $aircraft = [
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-triangle-exclamation me-1"></i>NOTAMs (mandatory, PDF)</label>
               <div class="form-text">Include EGMA or LEGR and any destinations/alternates as applicable.</div>
-              <input class="form-control" type="file" name="notams" accept="application/pdf" required>
+              <div class="input-group">
+                <input class="form-control" type="file" name="notams" accept="application/pdf" required id="notams-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-notams">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
               <div class="invalid-feedback">NOTAMs are required.</div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label"><i class="fa-solid fa-cloud-sun-rain me-1"></i>SIGWX (PDF)</label>
-              <input class="form-control" type="file" name="sigwx" accept="application/pdf">
+              <label class="form-label"><i class="fa-solid fa-cloud-sun-rain me-1"></i>SIGWX/SIGMET (PDF)</label>
+              <div class="input-group">
+                <input class="form-control" type="file" name="sigwx" accept="application/pdf" id="sigwx-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-sigmet">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
             </div>
 
             <div class="mb-3">
@@ -141,7 +151,12 @@ $aircraft = [
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-cloud me-1"></i>METAR &amp; TAF (PDF)</label>
-              <input class="form-control" type="file" name="metar_taf" accept="application/pdf">
+              <div class="input-group">
+                <input class="form-control" type="file" name="metar_taf" accept="application/pdf" id="metar-taf-file">
+                <button class="btn btn-outline-primary" type="button" id="fetch-metar-taf">
+                  <i class="fa-solid fa-download me-1"></i>Fetch via API
+                </button>
+              </div>
             </div>
 
             <div class="mb-3">
