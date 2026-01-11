@@ -117,7 +117,11 @@ try {
             }
             
             // Generate PDF
-            $tempFile = tempnam(sys_get_temp_dir(), 'metar_taf_') . '.pdf';
+            $tempFile = tempnam(sys_get_temp_dir(), 'metar_taf_');
+            if ($tempFile === false) {
+                throw new \RuntimeException('Failed to create temporary file');
+            }
+            $tempFile .= '.pdf';
             PdfGenerator::generateMetarTafPdf($airfieldData, $tempFile);
             
             // Store file in session
@@ -154,7 +158,11 @@ try {
             }
             
             // Generate PDF
-            $tempFile = tempnam(sys_get_temp_dir(), 'sigmet_') . '.pdf';
+            $tempFile = tempnam(sys_get_temp_dir(), 'sigmet_');
+            if ($tempFile === false) {
+                throw new \RuntimeException('Failed to create temporary file');
+            }
+            $tempFile .= '.pdf';
             PdfGenerator::generateSigmetPdf($airfieldData, $tempFile);
             
             // Store file in session
@@ -188,7 +196,11 @@ try {
             }
             
             // Generate PDF
-            $tempFile = tempnam(sys_get_temp_dir(), 'notams_') . '.pdf';
+            $tempFile = tempnam(sys_get_temp_dir(), 'notams_');
+            if ($tempFile === false) {
+                throw new \RuntimeException('Failed to create temporary file');
+            }
+            $tempFile .= '.pdf';
             PdfGenerator::generateNotamPdf($airfieldData, $tempFile);
             
             // Store file in session

@@ -38,6 +38,7 @@ final class NotamApiClient
     {
         $ch = curl_init($url);
         if ($ch === false) {
+            error_log("Notamify API: Failed to initialize cURL for URL: {$url}");
             return null;
         }
 
@@ -53,9 +54,16 @@ final class NotamApiClient
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
         curl_close($ch);
 
-        if ($response === false || $httpCode !== 200) {
+        if ($response === false) {
+            error_log("Notamify API: cURL error for URL {$url}: {$error}");
+            return null;
+        }
+
+        if ($httpCode !== 200) {
+            error_log("Notamify API: HTTP {$httpCode} for URL: {$url}");
             return null;
         }
 

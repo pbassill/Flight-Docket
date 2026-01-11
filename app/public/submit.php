@@ -129,33 +129,31 @@ $stored = [];
 
 $uploadCfg = $config['uploads'];
 
-// Helper function to check if file was fetched via API
-function hasApiFile(string $field): bool {
-    $apiKey = $_POST["{$field}_api_key"] ?? '';
-    return !empty($apiKey) && isset($_SESSION['api_files'][$apiKey]);
-}
-
-// Helper function to get API file path
-function getApiFilePath(string $field): ?string {
+// Helper function to get API file info
+function getApiFileInfo(string $field): ?array {
     $apiKey = $_POST["{$field}_api_key"] ?? '';
     if (empty($apiKey) || !isset($_SESSION['api_files'][$apiKey])) {
         return null;
     }
-    return $_SESSION['api_files'][$apiKey];
+    return [
+        'key' => $apiKey,
+        'path' => $_SESSION['api_files'][$apiKey],
+    ];
 }
 
 foreach ($requiredFiles as $field => $filename) {
     // Check if file was fetched via API
-    if (hasApiFile($field)) {
-        $apiFilePath = getApiFilePath($field);
-        if ($apiFilePath && is_file($apiFilePath)) {
+    $apiInfo = getApiFileInfo($field);
+    if ($apiInfo !== null) {
+        $apiFilePath = $apiInfo['path'];
+        if (is_file($apiFilePath)) {
             $dest = "{$uploadDir}/{$filename}";
             copy($apiFilePath, $dest);
             chmod($dest, 0640);
             $stored[$field] = $dest;
             // Clean up temp file
             unlink($apiFilePath);
-            unset($_SESSION['api_files'][$_POST["{$field}_api_key"]]);
+            unset($_SESSION['api_files'][$apiInfo['key']]);
             continue;
         }
     }
@@ -174,16 +172,17 @@ foreach ($requiredFiles as $field => $filename) {
 
 foreach ($optionalFiles as $field => $filename) {
     // Check if file was fetched via API
-    if (hasApiFile($field)) {
-        $apiFilePath = getApiFilePath($field);
-        if ($apiFilePath && is_file($apiFilePath)) {
+    $apiInfo = getApiFileInfo($field);
+    if ($apiInfo !== null) {
+        $apiFilePath = $apiInfo['path'];
+        if (is_file($apiFilePath)) {
             $dest = "{$uploadDir}/{$filename}";
             copy($apiFilePath, $dest);
             chmod($dest, 0640);
             $stored[$field] = $dest;
             // Clean up temp file
             unlink($apiFilePath);
-            unset($_SESSION['api_files'][$_POST["{$field}_api_key"]]);
+            unset($_SESSION['api_files'][$apiInfo['key']]);
             continue;
         }
     }

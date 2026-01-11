@@ -277,8 +277,8 @@ $aircraft = [
       }
     } catch (error) {
       alert(`Error fetching data: ${error.message}`);
-      button.disabled = false;
-      button.innerHTML = '<i class="fa-solid fa-download me-1"></i>Fetch via API';
+      btnElement.disabled = false;
+      btnElement.innerHTML = originalText;
     }
   };
 
