@@ -84,7 +84,13 @@ $aircraft = [
 
               <div class="col-12">
                 <label class="form-label">Alternates (comma-separated ICAO, optional)</label>
-                <input class="form-control text-uppercase" name="alternates" placeholder="LEMG, EGKA">
+                <div class="input-group">
+                  <input class="form-control text-uppercase" id="alternates" name="alternates" placeholder="LEMG, EGKA">
+                  <button class="btn btn-outline-secondary" type="button" id="findAlternatesBtn" title="Auto-fill viable alternates within 10-25 miles">
+                    <i class="fa-solid fa-location-crosshairs me-1"></i>Find Alternates
+                  </button>
+                </div>
+                <div class="form-text" id="alternatesHelp"></div>
               </div>
             </div>
 
@@ -187,6 +193,69 @@ $aircraft = [
       }
       form.classList.add('was-validated');
     }, false);
+  });
+
+  // Auto-fill alternates functionality
+  const findAlternatesBtn = document.getElementById('findAlternatesBtn');
+  const departureInput = document.querySelector('input[name="departure"]');
+  const destinationInput = document.querySelector('input[name="destination"]');
+  const alternatesInput = document.getElementById('alternates');
+  const alternatesHelp = document.getElementById('alternatesHelp');
+  const csrfToken = '<?= htmlspecialchars($csrfToken) ?>';
+
+  if (findAlternatesBtn) {
+    findAlternatesBtn.addEventListener('click', async () => {
+      const departure = departureInput.value.trim().toUpperCase();
+      const destination = destinationInput.value.trim().toUpperCase();
+
+      // Validate inputs
+      if (!departure || departure.length !== 4) {
+        alternatesHelp.textContent = 'Please enter a valid 4-letter departure ICAO code.';
+        alternatesHelp.className = 'form-text text-danger';
+        return;
+      }
+
+      if (!destination || destination.length !== 4) {
+        alternatesHelp.textContent = 'Please enter a valid 4-letter destination ICAO code.';
+        alternatesHelp.className = 'form-text text-danger';
+        return;
+      }
+
+      // Show loading state
+      findAlternatesBtn.disabled = true;
+      findAlternatesBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Finding...';
+      alternatesHelp.textContent = 'Searching for viable alternates...';
+      alternatesHelp.className = 'form-text text-muted';
+
+      try {
+        const url = `api_alternates.php?departure=${encodeURIComponent(departure)}&destination=${encodeURIComponent(destination)}&csrf_token=${encodeURIComponent(csrfToken)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success && data.alternates) {
+          if (data.alternates.length > 0) {
+            alternatesInput.value = data.alternates.join(', ');
+            alternatesHelp.textContent = `Found ${data.count} alternate(s) within 10-25 miles of departure or destination.`;
+            alternatesHelp.className = 'form-text text-success';
+          } else {
+            alternatesHelp.textContent = 'No alternates found within 25 miles of departure or destination.';
+            alternatesHelp.className = 'form-text text-warning';
+          }
+        } else {
+          alternatesHelp.textContent = data.error || 'Failed to find alternates.';
+          alternatesHelp.className = 'form-text text-danger';
+        }
+      } catch (error) {
+        alternatesHelp.textContent = 'Error: ' + error.message;
+        alternatesHelp.className = 'form-text text-danger';
+      } finally {
+        // Reset button state
+        findAlternatesBtn.disabled = false;
+        findAlternatesBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i>Find Alternates';
+      }
+    });
+  }
+})();
   });
 })();
 </script>

@@ -1,0 +1,8 @@
+/vendor/
+/storage/uploads/
+/storage/generated/
+/storage/dockets/
+/storage/logs/
+composer.phar
+.DS_Store
+*.log
