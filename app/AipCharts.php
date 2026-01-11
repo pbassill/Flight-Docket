@@ -7,6 +7,11 @@ namespace OTR;
 final class AipCharts
 {
     /**
+     * Chart type identifiers used to filter relevant chart files
+     */
+    private const CHART_TYPES = ['VAC', 'ADC', 'PDC', 'AERODROME', 'AD '];
+    
+    /**
      * Get chart pack for a specific ICAO code from AIP storage
      * 
      * Returns an array of PDF file paths for the given ICAO code.
@@ -54,13 +59,15 @@ final class AipCharts
             
             // Check if file matches expected chart types (case-insensitive)
             $fileUpper = strtoupper($file);
-            if (
-                strpos($fileUpper, 'VAC') !== false ||   // Visual Approach Chart
-                strpos($fileUpper, 'ADC') !== false ||   // Aerodrome Chart
-                strpos($fileUpper, 'PDC') !== false ||   // Parking/Docking Chart
-                strpos($fileUpper, 'AERODROME') !== false || // Aerodrome data
-                strpos($fileUpper, 'AD ') !== false      // Aerodrome (alternate format)
-            ) {
+            $isChartFile = false;
+            foreach (self::CHART_TYPES as $chartType) {
+                if (str_contains($fileUpper, $chartType)) {
+                    $isChartFile = true;
+                    break;
+                }
+            }
+            
+            if ($isChartFile) {
                 $charts[] = $filePath;
             }
         }
@@ -81,9 +88,20 @@ final class AipCharts
             return false;
         }
         
+        // Validate all input files exist and are readable
+        foreach ($chartFiles as $file) {
+            if (!is_file($file) || !is_readable($file)) {
+                return false;
+            }
+        }
+        
         // Ensure output directory exists
         $outputDir = dirname($outputPath);
-        if (!is_dir($outputDir) && !mkdir($outputDir, 0750, true) && !is_dir($outputDir)) {
+        try {
+            if (!is_dir($outputDir) && !mkdir($outputDir, 0750, true) && !is_dir($outputDir)) {
+                return false;
+            }
+        } catch (\Exception $e) {
             return false;
         }
         

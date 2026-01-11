@@ -190,7 +190,7 @@ foreach ($optionalFiles as $field => $filename) {
 }
 
 // Gather charts from AIP storage
-$aipBasePath = $config['paths']['aip'];
+$aipBasePath = $config['paths']['aip'] ?? __DIR__ . '/../storage/aip';
 
 // Departure charts
 $departureCharts = AipCharts::getChartPack($departure, $aipBasePath);
