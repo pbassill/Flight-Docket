@@ -100,7 +100,7 @@ final class AipCrawler
     }
 
     /**
-     * Find PDF URLs for a given ICAO code by crawling the AIP website
+     * Find PDF URLs for a given ICAO code using known ENAIRE URL patterns
      * 
      * @param string $icao ICAO airport code
      * @return array Array of PDF URLs
@@ -109,28 +109,29 @@ final class AipCrawler
     {
         $pdfUrls = [];
 
-        // Try different common URL patterns for AIP data
-        // Pattern 1: Direct airport directory
-        $airportPageUrl = self::BASE_URL . "/aip/{$icao}";
-        $links = $this->extractPdfLinksFromPage($airportPageUrl);
-        $pdfUrls = array_merge($pdfUrls, $links);
+        // Extract country prefix (first 2 letters of ICAO code)
+        $countryPrefix = substr($icao, 0, 2);
 
-        // Pattern 2: AD (Aerodrome) section
-        $adPageUrl = self::BASE_URL . "/eAIP_AD/{$icao}";
-        $links = $this->extractPdfLinksFromPage($adPageUrl);
-        $pdfUrls = array_merge($pdfUrls, $links);
+        // Base URL pattern for ENAIRE AIP
+        // Pattern: https://aip.enaire.es/AIP/contenido_AIP/AD/AD2/{ICAO}/{PREFIX}_AD_2_{ICAO}[_TYPE]_en.pdf
+        $baseUrl = self::BASE_URL . "/contenido_AIP/AD/AD2/{$icao}";
 
-        // Pattern 3: Alternative structure
-        $altPageUrl = self::BASE_URL . "/AD/{$icao}";
-        $links = $this->extractPdfLinksFromPage($altPageUrl);
-        $pdfUrls = array_merge($pdfUrls, $links);
+        // Document types to download
+        $documentTypes = [
+            '',         // Main aerodrome document: LE_AD_2_LEGR_en.pdf
+            '_ADC_1',   // Aerodrome Chart: LE_AD_2_LEGR_ADC_1_en.pdf
+            '_PDC_1',   // Parking/Docking Chart: LE_AD_2_LEGR_PDC_1_en.pdf
+            '_VAC_1',   // Visual Approach Chart: LE_AD_2_LEGR_VAC_1_en.pdf
+        ];
 
-        // Pattern 4: Try generic AIRAC structure
-        $airacUrl = self::BASE_URL . "/AIRAC";
-        $links = $this->extractPdfLinksFromPage($airacUrl, $icao);
-        $pdfUrls = array_merge($pdfUrls, $links);
+        foreach ($documentTypes as $docType) {
+            // Construct the PDF filename
+            $filename = "{$countryPrefix}_AD_2_{$icao}{$docType}_en.pdf";
+            $pdfUrl = "{$baseUrl}/{$filename}";
+            $pdfUrls[] = $pdfUrl;
+        }
 
-        return array_unique($pdfUrls);
+        return $pdfUrls;
     }
 
     /**
