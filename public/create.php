@@ -96,6 +96,13 @@ $aircraft = [
 
             <hr class="my-4">
 
+            <div class="mb-3">
+              <button class="btn btn-primary" type="button" id="fetch-all-data">
+                <i class="fa-solid fa-cloud-arrow-down me-1"></i>Fetch Data via API
+              </button>
+              <div class="form-text" id="fetch-all-help">Automatically fetch METAR/TAF, SIGMET, and NOTAMs data from CheckWX and Notamify APIs.</div>
+            </div>
+
             <h2 class="h5">Uploads</h2>
 
             <div class="mb-3">
@@ -125,23 +132,15 @@ $aircraft = [
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-triangle-exclamation me-1"></i>NOTAMs (mandatory, PDF)</label>
               <div class="form-text">Include EGMA or LEGR and any destinations/alternates as applicable.</div>
-              <div class="input-group">
-                <input class="form-control" type="file" name="notams" accept="application/pdf" required id="notams-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-notams">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="notams" accept="application/pdf" required id="notams-file">
+              <input type="hidden" name="notams_api_key" id="notams-api-key">
               <div class="invalid-feedback">NOTAMs are required.</div>
             </div>
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-cloud-sun-rain me-1"></i>SIGWX/SIGMET (PDF)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="sigwx" accept="application/pdf" id="sigwx-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-sigmet">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="sigwx" accept="application/pdf" id="sigwx-file">
+              <input type="hidden" name="sigwx_api_key" id="sigwx-api-key">
             </div>
 
             <div class="mb-3">
@@ -151,12 +150,8 @@ $aircraft = [
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-cloud me-1"></i>METAR &amp; TAF (PDF)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="metar_taf" accept="application/pdf" id="metar-taf-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-metar-taf">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="metar_taf" accept="application/pdf" id="metar-taf-file">
+              <input type="hidden" name="metar_taf_api_key" id="metar-taf-api-key">
             </div>
 
             <div class="mb-3">
