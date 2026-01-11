@@ -3,6 +3,8 @@
 /storage/generated/
 /storage/dockets/
 /storage/logs/
+/storage/aip/*
+!/storage/aip/README.md
 composer.phar
 .DS_Store
 *.log

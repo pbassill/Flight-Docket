@@ -14,6 +14,7 @@ return [
         'logo'      => __DIR__ . '/public/assets/otr-logo.png',
         'logs'      => __DIR__ . '/storage/logs',
         'aircraft'  => __DIR__ . '/storage/aircraft',
+        'aip'       => __DIR__ . '/storage/aip',
     ],
 
     'uploads' => [
@@ -35,6 +36,10 @@ return [
         'notamify' => [
             'enabled' => true,
             'base_url' => 'https://api.notamify.com/v1',
+        ],
+        'aip_espana' => [
+            'enabled' => true,
+            'base_url' => 'https://aip.enaire.es/AIP',
         ],
     ],
 ];
