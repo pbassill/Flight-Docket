@@ -30,24 +30,28 @@ final class PdfGenerator
             $pdf->SetFont('Courier', '', 10);
             
             // METAR
-            if (isset($data['metar']) && is_array($data['metar']) && !empty($data['metar']['data'])) {
+            if (isset($data['metar']) && is_array($data['metar']) 
+                && !empty($data['metar']['data']) && is_array($data['metar']['data'])
+                && isset($data['metar']['data'][0])) {
                 $pdf->SetFont('Courier', 'B', 10);
                 $pdf->Cell(0, 6, 'METAR:', 0, 1);
                 $pdf->SetFont('Courier', '', 9);
                 
-                $metarData = $data['metar']['data'][0] ?? [];
+                $metarData = $data['metar']['data'][0];
                 $rawText = $metarData['raw_text'] ?? 'No METAR available';
                 $pdf->MultiCell(0, 5, $rawText);
                 $pdf->Ln(2);
             }
             
             // TAF
-            if (isset($data['taf']) && is_array($data['taf']) && !empty($data['taf']['data'])) {
+            if (isset($data['taf']) && is_array($data['taf']) 
+                && !empty($data['taf']['data']) && is_array($data['taf']['data'])
+                && isset($data['taf']['data'][0])) {
                 $pdf->SetFont('Courier', 'B', 10);
                 $pdf->Cell(0, 6, 'TAF:', 0, 1);
                 $pdf->SetFont('Courier', '', 9);
                 
-                $tafData = $data['taf']['data'][0] ?? [];
+                $tafData = $data['taf']['data'][0];
                 $rawText = $tafData['raw_text'] ?? 'No TAF available';
                 $pdf->MultiCell(0, 5, $rawText);
                 $pdf->Ln(2);
