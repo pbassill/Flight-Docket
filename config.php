@@ -36,5 +36,9 @@ return [
             'enabled' => true,
             'base_url' => 'https://api.notamify.com/v1',
         ],
+        'aip_espana' => [
+            'enabled' => true,
+            'base_url' => 'https://aip.enaire.es/AIP',
+        ],
     ],
 ];

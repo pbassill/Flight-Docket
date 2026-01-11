@@ -96,6 +96,13 @@ $aircraft = [
 
             <hr class="my-4">
 
+            <div class="mb-3">
+              <button class="btn btn-primary" type="button" id="fetch-all-data">
+                <i class="fa-solid fa-cloud-arrow-down me-1"></i>Fetch Data via API
+              </button>
+              <div class="form-text" id="fetch-all-help">Automatically fetch METAR/TAF, SIGMET, and NOTAMs data from CheckWX and Notamify APIs.</div>
+            </div>
+
             <h2 class="h5">Uploads</h2>
 
             <div class="mb-3">
@@ -125,23 +132,15 @@ $aircraft = [
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-triangle-exclamation me-1"></i>NOTAMs (mandatory, PDF)</label>
               <div class="form-text">Include EGMA or LEGR and any destinations/alternates as applicable.</div>
-              <div class="input-group">
-                <input class="form-control" type="file" name="notams" accept="application/pdf" required id="notams-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-notams">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="notams" accept="application/pdf" required id="notams-file">
+              <input type="hidden" name="notams_api_key" id="notams-api-key">
               <div class="invalid-feedback">NOTAMs are required.</div>
             </div>
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-cloud-sun-rain me-1"></i>SIGWX/SIGMET (PDF)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="sigwx" accept="application/pdf" id="sigwx-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-sigmet">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="sigwx" accept="application/pdf" id="sigwx-file">
+              <input type="hidden" name="sigwx_api_key" id="sigwx-api-key">
             </div>
 
             <div class="mb-3">
@@ -151,12 +150,8 @@ $aircraft = [
 
             <div class="mb-3">
               <label class="form-label"><i class="fa-solid fa-cloud me-1"></i>METAR &amp; TAF (PDF)</label>
-              <div class="input-group">
-                <input class="form-control" type="file" name="metar_taf" accept="application/pdf" id="metar-taf-file">
-                <button class="btn btn-outline-primary" type="button" id="fetch-metar-taf">
-                  <i class="fa-solid fa-download me-1"></i>Fetch via API
-                </button>
-              </div>
+              <input class="form-control" type="file" name="metar_taf" accept="application/pdf" id="metar-taf-file">
+              <input type="hidden" name="metar_taf_api_key" id="metar-taf-api-key">
             </div>
 
             <div class="alert alert-info" role="alert">
@@ -255,6 +250,130 @@ $aircraft = [
         findAlternatesBtn.disabled = false;
         findAlternatesBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i>Find Alternates';
       }
+    });
+  }
+
+  // Helper function to fetch charts via API
+  async function fetchCharts(chartType, icaoInput, fileInput, helpElement, button) {
+    const icao = icaoInput.value.trim().toUpperCase();
+
+    // Validate ICAO code
+    if (!icao || icao.length !== 4) {
+      helpElement.textContent = 'Please enter a valid 4-letter ICAO code.';
+      helpElement.className = 'form-text text-danger';
+      return;
+    }
+
+    // Check if it's a Spanish airport
+    if (!icao.startsWith('LE')) {
+      helpElement.textContent = 'AIP España API only supports Spanish airports (ICAO codes starting with LE).';
+      helpElement.className = 'form-text text-danger';
+      return;
+    }
+
+    // Show loading state
+    button.disabled = true;
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Fetching...';
+    helpElement.textContent = `Fetching charts for ${icao}...`;
+    helpElement.className = 'form-text text-muted';
+
+    try {
+      const formData = new FormData();
+      formData.append('csrf_token', csrfToken);
+      formData.append('icao', icao);
+      formData.append('chart_type', chartType);
+
+      const response = await fetch('fetch_charts.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.file_key) {
+        // Create a hidden input to store the file key
+        const existingInput = document.querySelector(`input[name="charts_${chartType}_api_key"]`);
+        if (existingInput) {
+          existingInput.remove();
+        }
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = `charts_${chartType}_api_key`;
+        hiddenInput.value = data.file_key;
+        fileInput.parentElement.appendChild(hiddenInput);
+
+        // Make file input optional since we have API data
+        fileInput.removeAttribute('required');
+        
+        helpElement.textContent = `✓ Fetched ${data.charts_found} chart(s) for ${icao} from AIP España`;
+        helpElement.className = 'form-text text-success';
+      } else {
+        helpElement.textContent = data.error || 'Failed to fetch charts.';
+        helpElement.className = 'form-text text-danger';
+      }
+    } catch (error) {
+      helpElement.textContent = 'Error: ' + error.message;
+      helpElement.className = 'form-text text-danger';
+    } finally {
+      // Reset button state
+      button.disabled = false;
+      button.innerHTML = originalHTML;
+    }
+  }
+
+  // Fetch charts for departure
+  const fetchChartsDepartureBtn = document.getElementById('fetch-charts-departure');
+  if (fetchChartsDepartureBtn) {
+    fetchChartsDepartureBtn.addEventListener('click', () => {
+      fetchCharts(
+        'departure',
+        departureInput,
+        document.getElementById('charts-departure-file'),
+        document.getElementById('charts-departure-help'),
+        fetchChartsDepartureBtn
+      );
+    });
+  }
+
+  // Fetch charts for destination
+  const fetchChartsDestinationBtn = document.getElementById('fetch-charts-destination');
+  if (fetchChartsDestinationBtn) {
+    fetchChartsDestinationBtn.addEventListener('click', () => {
+      fetchCharts(
+        'destination',
+        destinationInput,
+        document.getElementById('charts-destination-file'),
+        document.getElementById('charts-destination-help'),
+        fetchChartsDestinationBtn
+      );
+    });
+  }
+
+  // Fetch charts for alternates (use first alternate if multiple)
+  const fetchChartsAlternatesBtn = document.getElementById('fetch-charts-alternates');
+  if (fetchChartsAlternatesBtn) {
+    fetchChartsAlternatesBtn.addEventListener('click', () => {
+      const alternatesValue = alternatesInput.value.trim().toUpperCase();
+      if (!alternatesValue) {
+        const helpElement = document.getElementById('charts-alternates-help');
+        helpElement.textContent = 'Please enter at least one alternate ICAO code.';
+        helpElement.className = 'form-text text-danger';
+        return;
+      }
+      
+      // Use the first alternate
+      const firstAlternate = alternatesValue.split(',')[0].trim();
+      const fakeInput = { value: firstAlternate };
+      
+      fetchCharts(
+        'alternates',
+        fakeInput,
+        document.getElementById('charts-alternates-file'),
+        document.getElementById('charts-alternates-help'),
+        fetchChartsAlternatesBtn
+      );
     });
   }
 })();

@@ -1,15 +1,16 @@
 # API Integration Guide
 
-This document explains how to set up and use the CheckWX and Notamify API integrations for fetching METAR, TAF, SIGMET, and NOTAM data.
+This document explains how to set up and use the CheckWX, Notamify, and AIP España API integrations for fetching METAR, TAF, SIGMET, NOTAM data, and aerodrome charts.
 
 ## Overview
 
-The Flight-Docket application now supports automatic fetching of weather and NOTAM data through two external APIs:
+The Flight-Docket application now supports automatic fetching of weather, NOTAM, and chart data through three external APIs:
 
 - **CheckWX API**: Provides METAR, TAF, and SIGMET data
 - **Notamify API**: Provides NOTAM data
+- **AIP España**: Provides aerodrome charts (VAC/ADC/PDC) for Spanish airports
 
-These APIs eliminate the need to manually upload weather and NOTAM PDFs, streamlining the docket creation process.
+These APIs eliminate the need to manually upload weather, NOTAM, and chart PDFs, streamlining the docket creation process.
 
 ## Setup
 
@@ -50,6 +51,25 @@ The Notamify API does not require an API key. It is enabled by default:
 ],
 ```
 
+### 3. AIP España Configuration
+
+The AIP España integration does not require an API key. It is enabled by default and provides aerodrome charts for Spanish airports (ICAO codes starting with "LE"):
+
+```php
+'aip_espana' => [
+    'enabled' => true,
+    'base_url' => 'https://aip.enaire.es/AIP',
+],
+```
+
+**Supported airports:** Only Spanish airports with ICAO codes starting with "LE" (e.g., LEGR, LEMD, LEBL).
+
+**Available chart types:**
+- AD-2: Aerodrome Charts
+- VAC: Visual Approach Charts
+- ADC: Aerodrome Chart
+- PDC: Precision Approach Chart
+
 ## Usage
 
 ### Creating a Docket with API Data
@@ -63,6 +83,7 @@ The Notamify API does not require an API key. It is enabled by default:
    - **METAR & TAF**: Fetches current weather observations and forecasts
    - **SIGMET**: Fetches significant meteorological information
    - **NOTAMs**: Fetches notices to airmen
+   - **Charts (Departure/Destination/Alternates)**: Fetches aerodrome charts from AIP España (Spanish airports only)
 
 The system will:
 - Fetch data for all specified airfields (departure, destination, and alternates)
@@ -114,17 +135,22 @@ You can still manually upload PDFs if you prefer, or if the API is unavailable.
 - **`OTR\Api\NotamApiClient`**: Handles all Notamify API requests
   - `getNotams(string $icao): ?array`
 
+- **`OTR\Api\AipEspanaApiClient`**: Handles all AIP España requests
+  - `getAerodromeCharts(string $icao): ?array`
+  - `isSpanishAirport(string $icao): bool`
+
 ### PDF Generation
 
 - **`OTR\Api\PdfGenerator`**: Converts API responses to PDF documents
   - `generateMetarTafPdf(array $airfields, string $outputPath): void`
   - `generateSigmetPdf(array $airfields, string $outputPath): void`
   - `generateNotamPdf(array $airfields, string $outputPath): void`
+  - `mergeChartPdfs(array $chartsData, string $outputPath): void`
 
 ### Data Flow
 
 1. User enters flight information and clicks "Fetch via API"
-2. JavaScript sends AJAX request to `fetch_weather.php`
+2. JavaScript sends AJAX request to `fetch_weather.php` or `fetch_charts.php`
 3. Backend fetches data from appropriate API for all airfields
 4. Backend generates PDF from API response
 5. PDF is stored in session and file key returned to frontend
@@ -153,6 +179,14 @@ You can still manually upload PDFs if you prefer, or if the API is unavailable.
 - Verify the ICAO code is correct
 - Some smaller airports may not have TAF or SIGMET data
 - Check API rate limits haven't been exceeded
+- For AIP España charts: Only Spanish airports (ICAO starting with LE) are supported
+
+### Charts Not Available
+
+- AIP España only provides charts for Spanish airports (ICAO codes starting with "LE")
+- For non-Spanish airports, you must manually upload chart PDFs
+- Some Spanish airports may not have all chart types available
+- Check that the AIP España service is accessible from your server
 
 ### File Not Found Errors
 
