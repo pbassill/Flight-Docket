@@ -86,7 +86,6 @@ final class TrainingPdfGenerator
             ['Item' => 'Pilot (Right Seat)', 'Weight (kg)' => $pilotRightWeight, 'Arm (m)' => $passengerArm],
             ['Item' => 'Baggage', 'Weight (kg)' => $baggageWeight, 'Arm (m)' => $baggageArm],
             ['Item' => 'Fuel (Full)', 'Weight (kg)' => $fuelWeight, 'Arm (m)' => $fuelArm],
-            ['Item' => 'Oil (Full)', 'Weight (kg)' => $oilWeight, 'Arm (m)' => $emptyArm],
         ];
         
         // Calculate moments and totals
@@ -120,10 +119,24 @@ final class TrainingPdfGenerator
             $pdf->Cell($colWidths[3], 6, number_format($item['Moment (kg·m)'], 2), 1, 1, 'R');
         }
         
-        // Totals row
+        // Calculate zero fuel weight and moment
+        $zeroFuelWeight = $emptyWeight + $pilotLeftWeight + $pilotRightWeight + $baggageWeight;
+        $zeroFuelMoment = ($emptyWeight * $emptyArm) + ($pilotLeftWeight * $pilotArm) + 
+                          ($pilotRightWeight * $passengerArm) + ($baggageWeight * $baggageArm);
+        $zeroFuelCG = $zeroFuelWeight > 0 ? $zeroFuelMoment / $zeroFuelWeight : 0;
+        
+        // Zero Fuel Weight row
         $pdf->SetFont('Helvetica', 'B', 10);
         $pdf->SetFillColor(240, 240, 240);
         $pdf->Cell($colWidths[0], 7, 'TOTAL (Zero Fuel)', 1, 0, 'L', true);
+        $pdf->Cell($colWidths[1], 7, number_format($zeroFuelWeight, 1), 1, 0, 'R', true);
+        $pdf->Cell($colWidths[2], 7, number_format($zeroFuelCG, 3), 1, 0, 'R', true);
+        $pdf->Cell($colWidths[3], 7, number_format($zeroFuelMoment, 2), 1, 1, 'R', true);
+        
+        // Ramp/Takeoff Weight row (includes fuel)
+        $pdf->SetFont('Helvetica', 'B', 10);
+        $pdf->SetFillColor(230, 230, 230);
+        $pdf->Cell($colWidths[0], 7, 'TOTAL (Ramp Weight)', 1, 0, 'L', true);
         $pdf->Cell($colWidths[1], 7, number_format($totalWeight, 1), 1, 0, 'R', true);
         $pdf->Cell($colWidths[2], 7, number_format($cgPosition, 3), 1, 0, 'R', true);
         $pdf->Cell($colWidths[3], 7, number_format($totalMoment, 2), 1, 1, 'R', true);
@@ -138,12 +151,22 @@ final class TrainingPdfGenerator
         $maxTakeoffWeight = (float)($massBalance['max_takeoff_weight'] ?? 0);
         $weightMargin = $maxTakeoffWeight - $totalWeight;
         
-        $pdf->Cell(80, 6, 'Total Weight (Zero Fuel):', 0, 0);
+        $pdf->Cell(80, 6, 'Zero Fuel Weight:', 0, 0);
+        $pdf->SetFont('Helvetica', 'B', 10);
+        $pdf->Cell(0, 6, number_format($zeroFuelWeight, 1) . ' kg', 0, 1);
+        
+        $pdf->SetFont('Helvetica', '', 10);
+        $pdf->Cell(80, 6, 'Zero Fuel CG Position:', 0, 0);
+        $pdf->SetFont('Helvetica', 'B', 10);
+        $pdf->Cell(0, 6, number_format($zeroFuelCG, 3) . ' m', 0, 1);
+        
+        $pdf->SetFont('Helvetica', '', 10);
+        $pdf->Cell(80, 6, 'Ramp Weight (with fuel):', 0, 0);
         $pdf->SetFont('Helvetica', 'B', 10);
         $pdf->Cell(0, 6, number_format($totalWeight, 1) . ' kg', 0, 1);
         
         $pdf->SetFont('Helvetica', '', 10);
-        $pdf->Cell(80, 6, 'Center of Gravity Position:', 0, 0);
+        $pdf->Cell(80, 6, 'Ramp CG Position:', 0, 0);
         $pdf->SetFont('Helvetica', 'B', 10);
         $pdf->Cell(0, 6, number_format($cgPosition, 3) . ' m', 0, 1);
         
@@ -153,12 +176,23 @@ final class TrainingPdfGenerator
         $pdf->Cell(0, 6, number_format($maxTakeoffWeight, 1) . ' kg', 0, 1);
         
         $pdf->SetFont('Helvetica', '', 10);
-        $pdf->Cell(80, 6, 'Weight Margin:', 0, 0);
+        $pdf->Cell(80, 6, 'Weight Margin (MTOW - Ramp):', 0, 0);
         $color = $weightMargin >= 0 ? [0, 128, 0] : [255, 0, 0];
         $pdf->SetTextColor($color[0], $color[1], $color[2]);
         $pdf->SetFont('Helvetica', 'B', 10);
-        $pdf->Cell(0, 6, number_format($weightMargin, 1) . ' kg', 0, 1);
+        $prefix = $weightMargin < 0 ? 'OVERWEIGHT by ' : '';
+        $pdf->Cell(0, 6, $prefix . number_format(abs($weightMargin), 1) . ' kg', 0, 1);
         $pdf->SetTextColor(0, 0, 0);
+        
+        // Show fuel to remove if overweight
+        if ($weightMargin < 0) {
+            $pdf->SetFont('Helvetica', '', 10);
+            $fuelToRemove = abs($weightMargin);
+            $fuelToRemoveLiters = $fuelToRemove / self::FUEL_DENSITY;
+            $pdf->Cell(80, 6, 'Fuel to remove to reach MTOW:', 0, 0);
+            $pdf->SetFont('Helvetica', 'B', 10);
+            $pdf->Cell(0, 6, sprintf('%.1f kg (%.1f L)', $fuelToRemove, $fuelToRemoveLiters), 0, 1);
+        }
         
         $pdf->Ln(3);
         
@@ -204,7 +238,7 @@ final class TrainingPdfGenerator
         
         $pdf->Ln(5);
         $pdf->SetFont('Helvetica', 'I', 8);
-        $pdf->MultiCell(0, 4, 'Note: This is a training configuration. Always verify actual weights and balance before flight. Fuel density assumes AVGAS at 0.72 kg/L. Oil weight is estimated.');
+        $pdf->MultiCell(0, 4, 'Note: This is a training configuration. Always verify actual weights and balance before flight. Fuel density assumes AVGAS at 0.72 kg/L. Oil weight is included in Basic Empty Weight.');
     }
     
     /**
@@ -289,7 +323,7 @@ final class TrainingPdfGenerator
         $emptyWeight = (float)($massBalance['empty_weight'] ?? 0);
         $maxFuel = (float)($massBalance['max_fuel_capacity'] ?? 0);
         $fuelWeight = $maxFuel * self::FUEL_DENSITY;
-        $trainingWeight = $emptyWeight + 105.0 + 90.0 + 4.0 + $fuelWeight + self::OIL_WEIGHT;
+        $trainingWeight = $emptyWeight + 105.0 + 90.0 + 4.0 + $fuelWeight;
         
         $pdf->MultiCell(0, 5, sprintf(
             'With training configuration (2 pilots: 195 kg, baggage: 4 kg, full fuel: %.1f kg), ' .
