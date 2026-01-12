@@ -7,7 +7,7 @@ namespace OTR\Pdf;
 final class TrainingPdfGenerator
 {
     private const FUEL_DENSITY = 0.72; // kg/L for AVGAS
-    private const OIL_WEIGHT = 8.0; // kg for full oil
+    private const OIL_WEIGHT = 8.0; // kg for full oil (included in Basic Empty Weight)
     
     /**
      * Generate a training configuration PDF with Mass & Balance and Performance data
@@ -61,7 +61,7 @@ final class TrainingPdfGenerator
         $pdf->Cell(0, 5, '  • Left seat pilot: 105 kg', 0, 1);
         $pdf->Cell(0, 5, '  • Right seat pilot: 90 kg', 0, 1);
         $pdf->Cell(0, 5, '  • Baggage: 4 kg', 0, 1);
-        $pdf->Cell(0, 5, '  • Full fuel and full oil', 0, 1);
+        $pdf->Cell(0, 5, '  • Full fuel', 0, 1);
         $pdf->Ln(4);
         
         // Calculate values
@@ -77,7 +77,6 @@ final class TrainingPdfGenerator
         $pilotRightWeight = 90.0;
         $baggageWeight = 4.0;
         $fuelWeight = $maxFuel * self::FUEL_DENSITY;
-        $oilWeight = self::OIL_WEIGHT;
         
         // Build loading table
         $items = [
