@@ -71,6 +71,21 @@ function getValue(?array $data, string $key, string $subkey = ''): string {
 
             <h5 class="border-bottom pb-2 mb-3">Basic Information</h5>
             
+            <div class="mb-3">
+              <label class="form-label">Unit System</label>
+              <div class="btn-group w-100" role="group" aria-label="Unit system toggle">
+                <input type="radio" class="btn-check" name="unit_system" id="unit_metric" value="metric" checked autocomplete="off">
+                <label class="btn btn-outline-primary" for="unit_metric">
+                  <i class="fa-solid fa-globe me-1"></i>Metric
+                </label>
+                <input type="radio" class="btn-check" name="unit_system" id="unit_imperial" value="imperial" autocomplete="off">
+                <label class="btn btn-outline-primary" for="unit_imperial">
+                  <i class="fa-solid fa-flag-usa me-1"></i>Imperial
+                </label>
+              </div>
+              <div class="form-text">Toggle to switch between metric and imperial measurements. Data is stored in metric units.</div>
+            </div>
+            
             <div class="row g-3 mb-4">
               <div class="col-md-6">
                 <label class="form-label">Aircraft Type Code <span class="text-danger">*</span></label>
@@ -287,11 +302,153 @@ function getValue(?array $data, string $key, string $subkey = ''): string {
       if (!form.checkValidity()) {
         event.preventDefault();
         event.stopPropagation();
+        form.classList.add('was-validated');
+      } else {
+        // Convert all values back to metric before submitting
+        // Only do this right before actual submission
+        if (currentUnitSystem === 'imperial') {
+          convertFormValues('imperial', 'metric');
+        }
       }
-      form.classList.add('was-validated');
     }, false);
   });
 })();
+
+// Unit conversion and toggle functionality
+const unitConfig = {
+  empty_weight: {
+    metric: { unit: 'kg', label: 'Empty Weight (kg)', factor: 1 },
+    imperial: { unit: 'lbs', label: 'Empty Weight (lbs)', factor: 2.20462 }
+  },
+  max_takeoff_weight: {
+    metric: { unit: 'kg', label: 'Max Takeoff Weight (kg)', factor: 1 },
+    imperial: { unit: 'lbs', label: 'Max Takeoff Weight (lbs)', factor: 2.20462 }
+  },
+  max_landing_weight: {
+    metric: { unit: 'kg', label: 'Max Landing Weight (kg)', factor: 1 },
+    imperial: { unit: 'lbs', label: 'Max Landing Weight (lbs)', factor: 2.20462 }
+  },
+  empty_moment_arm: {
+    metric: { unit: 'm', label: 'Empty Weight Moment Arm (m)', factor: 1 },
+    imperial: { unit: 'in', label: 'Empty Weight Moment Arm (in)', factor: 39.3701 }
+  },
+  pilot_moment_arm: {
+    metric: { unit: 'm', label: 'Pilot Seat Moment Arm (m)', factor: 1 },
+    imperial: { unit: 'in', label: 'Pilot Seat Moment Arm (in)', factor: 39.3701 }
+  },
+  passenger_moment_arm: {
+    metric: { unit: 'm', label: 'Passenger Seat Moment Arm (m)', factor: 1 },
+    imperial: { unit: 'in', label: 'Passenger Seat Moment Arm (in)', factor: 39.3701 }
+  },
+  baggage_moment_arm: {
+    metric: { unit: 'm', label: 'Baggage Moment Arm (m)', factor: 1 },
+    imperial: { unit: 'in', label: 'Baggage Moment Arm (in)', factor: 39.3701 }
+  },
+  fuel_moment_arm: {
+    metric: { unit: 'm', label: 'Fuel Moment Arm (m)', factor: 1 },
+    imperial: { unit: 'in', label: 'Fuel Moment Arm (in)', factor: 39.3701 }
+  },
+  max_fuel_capacity: {
+    metric: { unit: 'L', label: 'Max Fuel Capacity (L)', factor: 1 },
+    imperial: { unit: 'gal', label: 'Max Fuel Capacity (gal)', factor: 0.264172 }
+  },
+  takeoff_distance: {
+    metric: { unit: 'm', label: 'Takeoff Distance (m)', factor: 1 },
+    imperial: { unit: 'ft', label: 'Takeoff Distance (ft)', factor: 3.28084 }
+  },
+  landing_distance: {
+    metric: { unit: 'm', label: 'Landing Distance (m)', factor: 1 },
+    imperial: { unit: 'ft', label: 'Landing Distance (ft)', factor: 3.28084 }
+  },
+  fuel_consumption: {
+    metric: { unit: 'L/hr', label: 'Fuel Consumption (L/hr)', factor: 1 },
+    imperial: { unit: 'gal/hr', label: 'Fuel Consumption (gal/hr)', factor: 0.264172 }
+  }
+};
+
+let currentUnitSystem = 'metric';
+
+function convertValue(value, fieldName, fromSystem, toSystem) {
+  if (!value || value === '' || !unitConfig[fieldName]) {
+    return value;
+  }
+  
+  const numValue = parseFloat(value);
+  if (isNaN(numValue)) {
+    return value;
+  }
+  
+  // Convert to metric first (base unit)
+  let metricValue = numValue;
+  if (fromSystem === 'imperial') {
+    metricValue = numValue / unitConfig[fieldName].imperial.factor;
+  }
+  
+  // Then convert to target system
+  if (toSystem === 'imperial') {
+    return (metricValue * unitConfig[fieldName].imperial.factor).toFixed(2);
+  }
+  
+  return metricValue.toFixed(2);
+}
+
+function updateUnitLabels(unitSystem) {
+  Object.keys(unitConfig).forEach(fieldName => {
+    const input = document.querySelector(`input[name="${fieldName}"]`);
+    if (input) {
+      const label = input.closest('.col-md-4, .col-12')?.querySelector('label');
+      if (label) {
+        const config = unitConfig[fieldName][unitSystem];
+        // Use textContent instead of innerHTML to prevent XSS
+        const requiredStar = label.querySelector('.text-danger');
+        label.textContent = config.label;
+        // Re-add required star if it existed
+        if (requiredStar) {
+          label.appendChild(requiredStar);
+        }
+      }
+    }
+  });
+}
+
+function convertFormValues(fromSystem, toSystem) {
+  Object.keys(unitConfig).forEach(fieldName => {
+    const input = document.querySelector(`input[name="${fieldName}"]`);
+    if (input && input.value) {
+      const convertedValue = convertValue(input.value, fieldName, fromSystem, toSystem);
+      input.value = convertedValue;
+    }
+  });
+}
+
+// Initialize unit toggle listeners
+document.addEventListener('DOMContentLoaded', function() {
+  const metricRadio = document.getElementById('unit_metric');
+  const imperialRadio = document.getElementById('unit_imperial');
+  
+  if (metricRadio && imperialRadio) {
+    metricRadio.addEventListener('change', function() {
+      if (this.checked) {
+        const oldSystem = currentUnitSystem;
+        currentUnitSystem = 'metric';
+        updateUnitLabels('metric');
+        convertFormValues(oldSystem, 'metric');
+      }
+    });
+    
+    imperialRadio.addEventListener('change', function() {
+      if (this.checked) {
+        const oldSystem = currentUnitSystem;
+        currentUnitSystem = 'imperial';
+        updateUnitLabels('imperial');
+        convertFormValues(oldSystem, 'imperial');
+      }
+    });
+  }
+  
+  // Initialize with metric system
+  updateUnitLabels('metric');
+});
 
 function deleteAircraft(id, typeCode) {
   if (!confirm(`Delete aircraft configuration "${typeCode}"?`)) {
