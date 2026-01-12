@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace OTR\Api;
 
-use setasign\Fpdf\Fpdf;
-
 final class PdfGenerator
 {
     /**
@@ -16,7 +14,7 @@ final class PdfGenerator
      */
     public static function generateMetarTafPdf(array $airfields, string $outputPath): void
     {
-        $pdf = new Fpdf();
+        $pdf = new \FPDF();
         $pdf->SetTitle('METAR & TAF');
         $pdf->SetAuthor('CheckWX API');
         $pdf->AddPage();
@@ -73,7 +71,7 @@ final class PdfGenerator
      */
     public static function generateSigmetPdf(array $airfields, string $outputPath): void
     {
-        $pdf = new Fpdf();
+        $pdf = new \FPDF();
         $pdf->SetTitle('SIGMET');
         $pdf->SetAuthor('CheckWX API');
         $pdf->AddPage();
@@ -116,7 +114,7 @@ final class PdfGenerator
      */
     public static function generateNotamPdf(array $airfields, string $outputPath): void
     {
-        $pdf = new Fpdf();
+        $pdf = new \FPDF();
         $pdf->SetTitle('NOTAMs');
         $pdf->SetAuthor('Notamify API');
         $pdf->AddPage();
