@@ -86,6 +86,26 @@ function getValue(?array $data, string $key, string $subkey = ''): string {
               <div class="form-text">Toggle to switch between metric and imperial measurements. Data is stored in metric units.</div>
             </div>
             
+            <div class="mb-3">
+              <label class="form-label">Training Configuration</label>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="training_mode" autocomplete="off">
+                <label class="form-check-label" for="training_mode">
+                  <i class="fa-solid fa-graduation-cap me-1"></i>Configure for Training
+                </label>
+              </div>
+              <div class="form-text">Enable to generate training configuration (Pilot L: 105kg, Pilot R: 90kg, Baggage: 4kg, Full fuel)</div>
+            </div>
+            
+            <?php if ($editAircraft): ?>
+            <div class="mb-3">
+              <button type="button" class="btn btn-outline-success w-100" id="generateTrainingPdf">
+                <i class="fa-solid fa-file-pdf me-1"></i>Generate Training PDF (Mass & Balance + Performance)
+              </button>
+              <div class="form-text">Creates a PDF with Mass & Balance sheet and Performance data for training configuration</div>
+            </div>
+            <?php endif; ?>
+            
             <div class="row g-3 mb-4">
               <div class="col-md-6">
                 <label class="form-label">Aircraft Type Code <span class="text-danger">*</span></label>
@@ -487,6 +507,40 @@ function deleteAircraft(id, typeCode) {
   document.body.appendChild(form);
   form.submit();
 }
+
+// Training mode functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const trainingModeCheckbox = document.getElementById('training_mode');
+  const generatePdfBtn = document.getElementById('generateTrainingPdf');
+  
+  // Training mode values are just for display/calculation purposes
+  // They don't need to be saved to the aircraft configuration
+  if (trainingModeCheckbox) {
+    trainingModeCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        alert('Training mode enabled. This will be used when generating the training PDF with:\n' +
+              '• Left seat pilot: 105 kg\n' +
+              '• Right seat pilot: 90 kg\n' +
+              '• Baggage: 4 kg\n' +
+              '• Full fuel and full oil');
+      }
+    });
+  }
+  
+  // Generate training PDF
+  if (generatePdfBtn) {
+    generatePdfBtn.addEventListener('click', function() {
+      const aircraftId = document.querySelector('input[name="id"]')?.value;
+      if (!aircraftId) {
+        alert('Please save the aircraft configuration first.');
+        return;
+      }
+      
+      // Open PDF generation endpoint in new tab
+      window.open('generate_training_pdf.php?aircraft_id=' + encodeURIComponent(aircraftId), '_blank');
+    });
+  }
+});
 </script>
 </body>
 </html>
